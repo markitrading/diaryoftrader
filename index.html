@@ -393,6 +393,16 @@
   }
   .toggle-btn.picked{background:var(--accent-bg);border-color:var(--accent-dim);color:var(--accent);}
 
+  .img-preview-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .img-preview-item{position:relative;width:64px;height:64px;border-radius:7px;overflow:hidden;border:1px solid var(--border);}
+  .img-preview-item img{width:100%;height:100%;object-fit:cover;display:block;}
+  .img-preview-item .img-remove{
+    position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+    background:rgba(0,0,0,0.65);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .img-preview-item.uploading{display:flex;align-items:center;justify-content:center;background:var(--panel-2);color:var(--text-faint);font-size:10px;text-align:center;}
+
   /* goals */
   .checkin-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
   .checkin-day{
@@ -821,13 +831,17 @@
             <div class="form-field" style="margin-top:6px;">
               <label>Hacia dónde se va el precio (DOL)</label>
               <textarea id="t-dol" placeholder="Plan/contexto de la sesión: ¿hacia dónde se dirige el precio? Puedes pegar una imagen aquí."></textarea>
-              <button type="button" class="btn-line" style="margin-top:8px;">+ Imagen</button>
+              <input type="file" id="t-dol-file" accept="image/*" style="display:none;" onchange="handleImageInputChange(this, 'dol')">
+              <button type="button" class="btn-line" style="margin-top:8px;" onclick="document.getElementById('t-dol-file').click()">+ Imagen</button>
+              <div class="img-preview-row" id="t-dol-images"></div>
             </div>
 
             <div class="form-field" style="margin-top:18px;">
               <label>Trade</label>
               <textarea id="t-desc" placeholder="Describe el trade. Puedes pegar una imagen aquí."></textarea>
-              <button type="button" class="btn-line" style="margin-top:8px;">+ Imagen</button>
+              <input type="file" id="t-desc-file" accept="image/*" style="display:none;" onchange="handleImageInputChange(this, 'trade')">
+              <button type="button" class="btn-line" style="margin-top:8px;" onclick="document.getElementById('t-desc-file').click()">+ Imagen</button>
+              <div class="img-preview-row" id="t-trade-images"></div>
             </div>
 
             <div class="form-field" style="margin-top:18px;">
@@ -1116,7 +1130,8 @@ async function loadTrades(){
   const { data, error } = await sb.from('trades').select('*').eq('user_email', currentUser.email).order('date', { ascending:true });
   trades = error ? [] : data.map(r => ({
     id:r.id, date:r.date, dir:r.dir, pl:Number(r.pl), account:r.account, session:r.session,
-    window:r.entry_window, control:r.control, mgmt:r.mgmt, dol:r.dol, desc:r.description, notes:r.notes
+    window:r.entry_window, control:r.control, mgmt:r.mgmt, dol:r.dol, desc:r.description, notes:r.notes,
+    dolImages:r.dol_images || [], tradeImages:r.trade_images || []
   }));
   renderJournalMetrics();
   renderCalendar();
@@ -1228,6 +1243,74 @@ function populateAccountSelect(){
     accounts.map(a => '<option value="' + a.name + '">' + a.name + '</option>').join('');
 }
 
+// ============ IMÁGENES DEL TRADE (DOL / Trade) ============
+let modalImages = { dol: [], trade: [] };
+
+function renderImagePreviews(field){
+  const wrap = document.getElementById(field === 'dol' ? 't-dol-images' : 't-trade-images');
+  wrap.innerHTML = modalImages[field].map((url, i) => `
+    <div class="img-preview-item">
+      <img src="${url}" alt="imagen adjunta">
+      <button type="button" class="img-remove" onclick="removeModalImage('${field}', ${i})">&times;</button>
+    </div>
+  `).join('');
+}
+
+function removeModalImage(field, i){
+  modalImages[field].splice(i, 1);
+  renderImagePreviews(field);
+}
+
+async function uploadTradeImage(file, field){
+  if(!currentUser || !file) return;
+  const wrap = document.getElementById(field === 'dol' ? 't-dol-images' : 't-trade-images');
+  const placeholder = document.createElement('div');
+  placeholder.className = 'img-preview-item uploading';
+  placeholder.textContent = 'Subiendo…';
+  wrap.appendChild(placeholder);
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  const path = `${currentUser.email}/${Date.now()}-${safeName}`;
+
+  const { error } = await sb.storage.from('trade-images').upload(path, file);
+  placeholder.remove();
+
+  if(error){
+    const errEl = document.getElementById('trade-error');
+    errEl.textContent = 'No se pudo subir la imagen: ' + error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const { data: pub } = sb.storage.from('trade-images').getPublicUrl(path);
+  modalImages[field].push(pub.publicUrl);
+  renderImagePreviews(field);
+}
+
+function handleImageInputChange(input, field){
+  if(input.files && input.files[0]){
+    uploadTradeImage(input.files[0], field);
+  }
+  input.value = '';
+}
+
+function setupImagePaste(textareaId, field){
+  const el = document.getElementById(textareaId);
+  el.addEventListener('paste', (e) => {
+    const items = e.clipboardData ? e.clipboardData.items : [];
+    for(const item of items){
+      if(item.type && item.type.startsWith('image/')){
+        e.preventDefault();
+        const file = item.getAsFile();
+        uploadTradeImage(file, field);
+        return;
+      }
+    }
+  });
+}
+setupImagePaste('t-dol', 'dol');
+setupImagePaste('t-desc', 'trade');
+
 function pickToggle(btn){
   btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('picked'));
   btn.classList.add('picked');
@@ -1235,6 +1318,9 @@ function pickToggle(btn){
 
 function openTradeModal(){
   populateAccountSelect();
+  modalImages = { dol: [], trade: [] };
+  renderImagePreviews('dol');
+  renderImagePreviews('trade');
   document.getElementById('trade-modal').classList.add('open');
 }
 function closeTradeModal(){
@@ -1267,7 +1353,9 @@ async function saveTrade(){
     mgmt: mgmtBtn ? mgmtBtn.dataset.val : '',
     dol: document.getElementById('t-dol').value,
     description: document.getElementById('t-desc').value,
-    notes: document.getElementById('t-notes').value
+    notes: document.getElementById('t-notes').value,
+    dol_images: modalImages.dol,
+    trade_images: modalImages.trade
   }).select().single();
 
   if(error){
@@ -1278,7 +1366,8 @@ async function saveTrade(){
 
   trades.push({
     id:data.id, date:data.date, dir:data.dir, pl:Number(data.pl), account:data.account, session:data.session,
-    window:data.entry_window, control:data.control, mgmt:data.mgmt, dol:data.dol, desc:data.description, notes:data.notes
+    window:data.entry_window, control:data.control, mgmt:data.mgmt, dol:data.dol, desc:data.description, notes:data.notes,
+    dolImages:data.dol_images || [], tradeImages:data.trade_images || []
   });
 
   renderJournalMetrics();
