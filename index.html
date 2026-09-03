@@ -891,6 +891,20 @@
         </div>
       </div>
 
+      <!-- VER TRADE (solo lectura) -->
+      <div class="modal-overlay" id="view-trade-modal">
+        <div class="modal-box">
+          <div class="modal-head">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="modal-icon" id="vt-icon" style="background:var(--panel-2);">W</div>
+              <span style="font-size:14px;font-weight:500;" id="vt-title">Trade</span>
+            </div>
+            <button class="modal-close" onclick="closeViewTradeModal()">&times;</button>
+          </div>
+          <div class="modal-body" id="vt-body"></div>
+        </div>
+      </div>
+
       <!-- LIGHTBOX DE IMÁGENES -->
       <div class="lightbox-overlay" id="image-lightbox" onclick="closeImageLightbox()">
         <button class="lightbox-close" onclick="event.stopPropagation();closeImageLightbox()">&times;</button>
@@ -1272,8 +1286,11 @@ function renderCalendar(){
     trades.filter(t => t.date === dateStr).forEach(t => {
       const pill = document.createElement('div');
       const cls = t.pl > 0 ? 'pos' : (t.pl < 0 ? 'neg' : 'be');
+      const outcomeLetter = t.pl > 0 ? 'W' : (t.pl < 0 ? 'L' : 'E');
       pill.className = 'cal-pill ' + cls;
-      pill.innerHTML = '<span>' + t.dir + '</span><span>' + fmtSigned(t.pl) + '</span>' +
+      pill.style.cursor = 'pointer';
+      pill.onclick = () => openViewTradeModal(t.id);
+      pill.innerHTML = '<span>' + outcomeLetter + '</span><span>' + fmtSigned(t.pl) + '</span>' +
         '<span class="cal-pill-del" onclick="event.stopPropagation();deleteTrade(\'' + t.id + '\')" title="Eliminar trade">&times;</span>';
       cell.appendChild(pill);
     });
@@ -1389,6 +1406,60 @@ setupImagePaste('t-desc', 'trade');
 function pickToggle(btn){
   btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('picked'));
   btn.classList.add('picked');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : str;
+  return div.innerHTML;
+}
+
+function renderImgGallery(images){
+  if(!images || images.length === 0) return '';
+  return '<div class="img-preview-row">' + images.map(url => `
+    <div class="img-preview-item" style="width:90px;height:90px;">
+      <img src="${url}" alt="imagen" onclick="openImageLightbox('${url}')">
+    </div>`).join('') + '</div>';
+}
+
+function openViewTradeModal(id){
+  const t = trades.find(x => x.id === id);
+  if(!t) return;
+
+  const outcomeLetter = t.pl > 0 ? 'W' : (t.pl < 0 ? 'L' : 'E');
+  const outcomeColor = t.pl > 0 ? 'var(--pos)' : (t.pl < 0 ? 'var(--neg)' : 'var(--text-faint)');
+  const dirLabel = t.dir === 'L' ? 'Long' : (t.dir === 'S' ? 'Short' : (t.dir || '—'));
+  const dateLabel = new Date(t.date + 'T00:00:00').toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' });
+
+  const iconEl = document.getElementById('vt-icon');
+  iconEl.textContent = outcomeLetter;
+  iconEl.style.color = outcomeColor;
+  document.getElementById('vt-title').textContent = `${dateLabel} · ${dirLabel}`;
+
+  document.getElementById('vt-body').innerHTML = `
+    <div class="profile-row"><span class="k">Resultado P/L</span><span style="color:${outcomeColor};font-family:'JetBrains Mono',monospace;">${fmtSigned(t.pl)}</span></div>
+    <div class="profile-row"><span class="k">Cuenta</span><span>${escapeHtml(t.account) || '—'}</span></div>
+    <div class="profile-row"><span class="k">Sesión</span><span>${escapeHtml(t.session) || '—'}</span></div>
+    <div class="profile-row"><span class="k">Ventana de entrada</span><span>${escapeHtml(t.window) || '—'}</span></div>
+    <div class="profile-row"><span class="k">¿Quién tenía el control?</span><span>${escapeHtml(t.control) || '—'}</span></div>
+    <div class="profile-row"><span class="k">Gestión de cuenta</span><span>${escapeHtml(t.mgmt) || '—'}</span></div>
+
+    <div class="modal-section-label" style="margin-top:20px;">Hacia dónde se va el precio (DOL)</div>
+    <p style="font-size:13px;color:var(--text);white-space:pre-wrap;">${t.dol ? escapeHtml(t.dol) : '<span style="color:var(--text-faint);">Sin anotar.</span>'}</p>
+    ${renderImgGallery(t.dolImages)}
+
+    <div class="modal-section-label" style="margin-top:20px;">Trade</div>
+    <p style="font-size:13px;color:var(--text);white-space:pre-wrap;">${t.desc ? escapeHtml(t.desc) : '<span style="color:var(--text-faint);">Sin anotar.</span>'}</p>
+    ${renderImgGallery(t.tradeImages)}
+
+    <div class="modal-section-label" style="margin-top:20px;">Notas</div>
+    <p style="font-size:13px;color:var(--text);white-space:pre-wrap;">${t.notes ? escapeHtml(t.notes) : '<span style="color:var(--text-faint);">Sin anotar.</span>'}</p>
+  `;
+
+  document.getElementById('view-trade-modal').classList.add('open');
+}
+function closeViewTradeModal(){
+  document.getElementById('view-trade-modal').classList.remove('open');
 }
 
 function openTradeModal(){
