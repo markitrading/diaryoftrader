@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Macro Desk</title>
+<title>Diary of Trader</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -17,9 +17,9 @@
     --text:#EDEEF0;
     --text-muted:#8B9199;
     --text-faint:#565C64;
-    --accent:#C89B4C;
-    --accent-dim:#8A6F3B;
-    --accent-bg:#241D10;
+    --accent:#79B8EC;
+    --accent-dim:#3D6E93;
+    --accent-bg:#12222E;
     --pos:#5FAE7E;
     --pos-bg:#12241A;
     --neg:#C1583F;
@@ -102,7 +102,7 @@
   .btn-primary{
     width:100%;
     background:var(--accent);
-    color:#1A1408;
+    color:#0B1720;
     border:none;
     border-radius:8px;
     padding:12px;
@@ -112,7 +112,7 @@
     cursor:pointer;
     margin-top:8px;
   }
-  .btn-primary:hover{background:#D6AC5D;}
+  .btn-primary:hover{background:#93C8F2;}
   .login-foot{
     display:flex;
     justify-content:space-between;
@@ -167,7 +167,7 @@
   .nav-item.active{
     background:var(--accent-bg);
     color:var(--accent);
-    border-color:#3A2E17;
+    border-color:#1F3C50;
   }
   .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:0.9;}
 
@@ -335,7 +335,7 @@
   .cal-daynum{font-size:11.5px;color:var(--text-muted);}
   .cal-daynum.today{
     display:inline-flex;align-items:center;justify-content:center;
-    width:18px;height:18px;border-radius:50%;background:var(--accent);color:#1A1408;
+    width:18px;height:18px;border-radius:50%;background:var(--accent);color:#0B1720;
     font-weight:600;
   }
   .cal-pill{
@@ -405,7 +405,7 @@
     display:inline-flex;align-items:center;justify-content:center;
     width:22px;height:22px;border-radius:50%;font-size:12px;color:var(--text-muted);
   }
-  .checkin-num.today{background:var(--accent);color:#1A1408;font-weight:600;}
+  .checkin-num.today{background:var(--accent);color:#0B1720;font-weight:600;}
 
   .goal-add-row{display:flex;gap:8px;margin-bottom:14px;}
   .goal-add-row input{
@@ -468,14 +468,18 @@
 <div id="login-view">
   <div class="login-box">
     <div class="brand-mark">
-      <div class="brand-glyph">MD</div>
+      <div class="brand-glyph">DT</div>
       <div>
-        <div class="brand-name">Macro Desk</div>
+        <div class="brand-name">Diary of Trader</div>
         <div class="brand-sub">Panel privado de la comunidad</div>
       </div>
     </div>
     <h1 id="login-title">Inicia sesión</h1>
     <p class="lede" id="login-lede">Accede con tu correo para ver tus cuentas, tu journal y tu progreso de la semana.</p>
+    <div class="field" id="login-fullname-field" style="display:none;">
+      <label>Nombre y apellidos</label>
+      <input type="text" id="login-fullname" placeholder="Como quieres que te vean en el club">
+    </div>
     <div class="field">
       <label>Correo</label>
       <input type="email" id="login-email" placeholder="nombre@correo.com">
@@ -502,8 +506,8 @@
 
     <div class="sidebar">
       <div class="side-brand">
-        <div class="brand-glyph">MD</div>
-        <div class="brand-name">Macro Desk</div>
+        <div class="brand-glyph">DT</div>
+        <div class="brand-name">Diary of Trader</div>
       </div>
       <ul class="nav">
         <li class="nav-item active" onclick="showView('dashboard', this)">
@@ -567,29 +571,11 @@
         <div class="grid-2">
           <div class="panel-block">
             <h3>Tus cuentas</h3>
-            <div class="rank-row" style="gap:10px;">
-              <span style="width:7px;height:7px;border-radius:50%;background:var(--neg);flex-shrink:0;"></span>
-              <div style="flex:1;">
-                <div style="font-size:13.5px;font-weight:500;">Lucid Flex 50K</div>
-                <div style="font-size:12px;color:var(--text-faint);">Eval quemada</div>
-              </div>
-              <span class="mono" style="color:var(--neg);font-size:13px;">-80,00 US$</span>
-            </div>
+            <div id="dash-accounts-preview"><p class="goal-empty">Todavía no has añadido ninguna cuenta.</p></div>
           </div>
           <div class="panel-block">
             <h3>Actividad reciente</h3>
-            <div class="rank-row" style="gap:10px;align-items:flex-start;">
-              <span style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;"></span>
-              <div><div style="font-size:13px;">Cuenta creada: <b>Lucid Flex 50K</b> · gasto 80,00 US$</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:2px;">02 sept 2026</div></div>
-            </div>
-            <div class="rank-row" style="gap:10px;align-items:flex-start;">
-              <span style="width:7px;height:7px;border-radius:50%;background:var(--neg);flex-shrink:0;margin-top:5px;"></span>
-              <div><div style="font-size:13px;">Eval quemada · Lucid Flex 50K</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:2px;">02 sept 2026</div></div>
-            </div>
-            <div class="rank-row" style="gap:10px;align-items:flex-start;border-bottom:none;">
-              <span style="width:7px;height:7px;border-radius:50%;background:var(--neg);flex-shrink:0;margin-top:5px;"></span>
-              <div><div style="font-size:13px;">Trade perdido (L) · -500,00 US$</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:2px;">02 sept 2026</div></div>
-            </div>
+            <div id="dash-activity-feed"><p class="goal-empty">Todavía no hay actividad.</p></div>
           </div>
         </div>
         <div class="grid-2">
@@ -598,18 +584,18 @@
               <h3 style="margin:0;">Objetivos de la semana</h3>
               <button class="btn-line" onclick="showView('goals', document.querySelector('.nav-item:nth-child(4)'))">Ver objetivos</button>
             </div>
-            <p style="font-size:12.5px;color:var(--text-faint);">Aún no has puesto objetivos esta semana.</p>
+            <div id="dash-goals-preview"><p style="font-size:12.5px;color:var(--text-faint);">Aún no has puesto objetivos esta semana.</p></div>
           </div>
           <div class="panel-block">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
               <h3 style="margin:0;">Leaderboard</h3>
               <button class="btn-line" onclick="showView('leaderboard', document.querySelector('.nav-item:nth-child(7)'))">Ver ranking</button>
             </div>
-            <div class="rank-row" style="border-bottom:none;">
-              <div class="rank-num" style="width:auto;color:var(--text-faint);">#51</div>
-              <div class="avatar" style="width:24px;height:24px;font-size:10px;">MA</div>
-              <div class="rank-name">Puesto 51 de 80</div>
-              <div class="rank-value">0,00 US$</div>
+            <div class="rank-row" style="border-bottom:none;" id="dash-leaderboard-row">
+              <div class="rank-num" style="width:auto;color:var(--text-faint);">—</div>
+              <div class="avatar" style="width:24px;height:24px;font-size:10px;">--</div>
+              <div class="rank-name">Todavía no apareces en el ranking</div>
+              <div class="rank-value"></div>
             </div>
           </div>
         </div>
@@ -883,14 +869,10 @@
       <div class="view" id="view-leaderboard">
         <div class="page-head">
           <h1>Leaderboard</h1>
-          <p>Ranking por payouts certificados del mes.</p>
+          <p>Ranking por retorno neto (payouts − gastado) de cada miembro.</p>
         </div>
-        <div class="panel-block">
-          <div class="rank-row"><div class="rank-num top">1</div><div class="rank-name">@nova.trades</div><div class="rank-value">$4.120</div></div>
-          <div class="rank-row"><div class="rank-num top">2</div><div class="rank-name">@dpineda_fx</div><div class="rank-value">$3.640</div></div>
-          <div class="rank-row"><div class="rank-num top">3</div><div class="rank-name">@marc.r</div><div class="rank-value">$2.980</div></div>
-          <div class="rank-row"><div class="rank-num">4</div><div class="rank-name">@juliaquant</div><div class="rank-value">$2.310</div></div>
-          <div class="rank-row"><div class="rank-num">5</div><div class="rank-name">@orderflow_kt</div><div class="rank-value">$1.870</div></div>
+        <div class="panel-block" id="leaderboard-list">
+          <p class="goal-empty">Todavía no hay datos suficientes para el ranking.</p>
         </div>
       </div>
 
@@ -933,10 +915,18 @@
         </div>
         <div class="panel-block">
           <div class="profile-row"><span class="k">Correo</span><span id="profile-email">—</span></div>
+          <div class="profile-row">
+            <span class="k">Nombre y apellidos</span>
+            <span style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="profile-name-input" placeholder="Añade tu nombre" style="background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:6px 9px;color:var(--text);font-family:inherit;font-size:13px;width:200px;">
+              <button class="btn-line" style="padding:6px 10px;font-size:12px;" onclick="saveProfileName()">Guardar</button>
+            </span>
+          </div>
           <div class="profile-row"><span class="k">Nivel de trading</span><span>Avanzado</span></div>
           <div class="profile-row"><span class="k">Fecha de ingreso</span><span>Marzo 2026</span></div>
           <div class="profile-row"><span class="k">Plan de membresía</span><span>1 año</span></div>
         </div>
+        <p id="profile-name-msg" style="display:none;font-size:12px;color:var(--pos);margin:-8px 0 16px;"></p>
         <button class="btn-line" onclick="handleLogout()">Cerrar sesión</button>
       </div>
 
@@ -960,6 +950,7 @@ function applyAuthModeLabels(){
   document.getElementById('login-title').textContent = authMode === 'login' ? 'Inicia sesión' : 'Crear cuenta';
   document.getElementById('login-submit-btn').textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
   document.getElementById('login-toggle-link').textContent = authMode === 'login' ? 'Crear cuenta' : 'Ya tengo cuenta';
+  document.getElementById('login-fullname-field').style.display = authMode === 'signup' ? 'block' : 'none';
 }
 function toggleAuthMode(){
   authMode = authMode === 'login' ? 'signup' : 'login';
@@ -983,14 +974,24 @@ async function handleAuthSubmit(){
   if(!email || !password){ showLoginMsg('Introduce correo y contraseña.', true); return; }
 
   if(authMode === 'signup'){
+    const fullName = document.getElementById('login-fullname').value.trim();
+    if(!fullName){ showLoginMsg('Escribe tu nombre y apellidos.', true); return; }
+
     const { data: allowed, error: allowedErr } = await sb.rpc('check_email_allowed', { check_email: email });
     if(allowedErr){ showLoginMsg('Error comprobando el acceso: ' + allowedErr.message, true); return; }
     if(!allowed){ showLoginMsg('Este correo no está autorizado. Contacta con el admin del club para que te añada.', true); return; }
 
-    const { error } = await sb.auth.signUp({ email, password });
+    const { data, error } = await sb.auth.signUp({ email, password });
     if(error){ showLoginMsg(error.message, true); return; }
 
-    showLoginMsg('Cuenta creada. Si tu proyecto pide confirmación por correo, revisa tu bandeja y luego inicia sesión.', false);
+    if(data.session){
+      // confirmación de correo desactivada: ya tenemos sesión, guardamos el nombre ya mismo
+      await sb.from('profiles').upsert({ user_email: email, full_name: fullName });
+      await onLoggedIn(email);
+      return;
+    }
+
+    showLoginMsg('Cuenta creada. Revisa tu correo para confirmar la cuenta y luego inicia sesión — te pedirá tu nombre la primera vez si hace falta.', false);
     authMode = 'login';
     applyAuthModeLabels();
   } else {
@@ -1014,13 +1015,75 @@ async function onLoggedIn(email){
 
   document.getElementById('login-view').style.display = 'none';
   document.getElementById('app-view').style.display = 'block';
-  document.getElementById('side-foot-email').textContent = email;
   document.getElementById('side-foot-avatar').textContent = email.slice(0,2).toUpperCase();
   document.getElementById('profile-email').textContent = email;
   document.getElementById('nav-admin').style.display = currentUser.isAdmin ? 'flex' : 'none';
 
-  await Promise.all([loadAccounts(), loadTrades(), loadGoals()]);
+  const { data: profile } = await sb.from('profiles').select('full_name').eq('user_email', email).maybeSingle();
+  currentUser.fullName = profile ? profile.full_name : '';
+  document.getElementById('side-foot-email').textContent = currentUser.fullName || email;
+  document.getElementById('profile-name-input').value = currentUser.fullName || '';
+
+  await Promise.all([loadAccounts(), loadTrades(), loadGoals(), loadLeaderboard()]);
   if(currentUser.isAdmin) loadAllowedEmails();
+}
+
+async function saveProfileName(){
+  const input = document.getElementById('profile-name-input');
+  const name = input.value.trim();
+  const msg = document.getElementById('profile-name-msg');
+  if(!name){ return; }
+  const { error } = await sb.from('profiles').upsert({ user_email: currentUser.email, full_name: name });
+  if(error){
+    msg.style.color = 'var(--neg)';
+    msg.textContent = 'Error al guardar: ' + error.message;
+    msg.style.display = 'block';
+    return;
+  }
+  currentUser.fullName = name;
+  document.getElementById('side-foot-email').textContent = name;
+  msg.style.color = 'var(--pos)';
+  msg.textContent = 'Nombre guardado.';
+  msg.style.display = 'block';
+  loadLeaderboard();
+}
+
+async function loadLeaderboard(){
+  const { data: top, error: topErr } = await sb.rpc('get_leaderboard');
+  const listWrap = document.getElementById('leaderboard-list');
+  if(topErr){
+    listWrap.innerHTML = '<p class="goal-empty">No se pudo cargar el ranking: ' + topErr.message + '</p>';
+  } else if(!top || top.length === 0){
+    listWrap.innerHTML = '<p class="goal-empty">Todavía no hay datos suficientes para el ranking.</p>';
+  } else {
+    listWrap.innerHTML = top.slice(0, 20).map((row, i) => {
+      const n = i + 1;
+      return `<div class="rank-row">
+        <div class="rank-num${n <= 3 ? ' top' : ''}">${n}</div>
+        <div class="rank-name">${row.display_name || 'Trader'}</div>
+        <div class="rank-value">${fmt(Number(row.net))}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const { data: mine } = await sb.rpc('get_my_rank');
+  const row = document.getElementById('dash-leaderboard-row');
+  if(mine && mine.length > 0){
+    const m = mine[0];
+    row.innerHTML = `
+      <div class="rank-num" style="width:auto;color:var(--text-faint);">#${m.rank}</div>
+      <div class="avatar" style="width:24px;height:24px;font-size:10px;">${(currentUser.fullName || currentUser.email).slice(0,2).toUpperCase()}</div>
+      <div class="rank-name">Puesto ${m.rank} de ${m.total_users}</div>
+      <div class="rank-value">${fmt(Number(m.net))}</div>
+    `;
+  } else {
+    row.innerHTML = `
+      <div class="rank-num" style="width:auto;color:var(--text-faint);">—</div>
+      <div class="avatar" style="width:24px;height:24px;font-size:10px;">${(currentUser.fullName || currentUser.email).slice(0,2).toUpperCase()}</div>
+      <div class="rank-name">Todavía no apareces en el ranking</div>
+      <div class="rank-value"></div>
+    `;
+  }
 }
 
 async function handleLogout(){
@@ -1030,6 +1093,9 @@ async function handleLogout(){
   document.getElementById('login-view').style.display = 'flex';
   document.getElementById('login-email').value = '';
   document.getElementById('login-password').value = '';
+  document.getElementById('login-fullname').value = '';
+  authMode = 'login';
+  applyAuthModeLabels();
   hideLoginMsg();
 }
 
@@ -1083,6 +1149,8 @@ function renderJournalMetrics(){
   dashPnl.textContent = fmtSigned(total).replace('+','');
   dashPnl.className = 'metric-value ' + (total < 0 ? 'neg' : (total > 0 ? 'pos' : ''));
   document.getElementById('dash-pnl-tag').textContent = trades.length + (trades.length === 1 ? ' trade' : ' trades');
+
+  renderDashboardOverview();
 }
 
 function renderCalendar(){
@@ -1287,15 +1355,16 @@ function renderGoalList(type){
   const el = document.getElementById('goals-' + type + '-list');
   if(list.length === 0){
     el.innerHTML = '<p class="goal-empty">Todavía no has añadido objetivos esta semana.</p>';
-    return;
+  } else {
+    el.innerHTML = list.map(g => `
+      <div class="goal-row">
+        <div class="goal-check ${g.done ? 'done' : ''}" onclick="toggleGoal('${type}', '${g.id}')">${g.done ? '✓' : ''}</div>
+        <div class="goal-text ${g.done ? 'done' : ''}" onclick="toggleGoal('${type}', '${g.id}')">${g.text}</div>
+        <button class="goal-del" onclick="deleteGoal('${type}', '${g.id}')">&times;</button>
+      </div>
+    `).join('');
   }
-  el.innerHTML = list.map(g => `
-    <div class="goal-row">
-      <div class="goal-check ${g.done ? 'done' : ''}" onclick="toggleGoal('${type}', '${g.id}')">${g.done ? '✓' : ''}</div>
-      <div class="goal-text ${g.done ? 'done' : ''}" onclick="toggleGoal('${type}', '${g.id}')">${g.text}</div>
-      <button class="goal-del" onclick="deleteGoal('${type}', '${g.id}')">&times;</button>
-    </div>
-  `).join('');
+  if(typeof renderDashboardOverview === 'function' && document.getElementById('dash-goals-preview')) renderDashboardOverview();
 }
 
 async function addGoal(type){
@@ -1360,7 +1429,7 @@ async function loadAccounts(){
   const { data, error } = await sb.from('accounts').select('*').eq('user_email', currentUser.email).order('created_at', { ascending:false });
   accounts = error ? [] : data.map(r => ({
     id:r.id, name:r.name, status:r.status, statusType:r.status_type,
-    size:Number(r.size), dateLabel:r.date_label, spent:Number(r.spent), payouts:Number(r.payouts)
+    size:Number(r.size), dateLabel:r.date_label, spent:Number(r.spent), payouts:Number(r.payouts), createdAt:r.created_at
   }));
   renderAccounts();
 }
@@ -1395,6 +1464,63 @@ function renderAccounts(){
   updateDashboardFromAccounts();
 }
 
+function renderDashboardOverview(){
+  // --- Tus cuentas ---
+  const accWrap = document.getElementById('dash-accounts-preview');
+  if(accounts.length === 0){
+    accWrap.innerHTML = '<p class="goal-empty">Todavía no has añadido ninguna cuenta.</p>';
+  } else {
+    accWrap.innerHTML = accounts.slice(0, 4).map(a => {
+      const net = a.payouts - a.spent;
+      const dotColor = a.statusType === 'neg' ? 'var(--neg)' : (a.statusType === 'pos' ? 'var(--pos)' : 'var(--accent)');
+      const netColor = net < 0 ? 'var(--neg)' : (net > 0 ? 'var(--pos)' : 'var(--text)');
+      return `<div class="rank-row" style="gap:10px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:${dotColor};flex-shrink:0;"></span>
+        <div style="flex:1;">
+          <div style="font-size:13.5px;font-weight:500;">${a.name}</div>
+          <div style="font-size:12px;color:var(--text-faint);">${a.status}</div>
+        </div>
+        <span class="mono" style="color:${netColor};font-size:13px;">${net < 0 ? '-' : ''}${fmt(Math.abs(net))}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // --- Actividad reciente ---
+  const events = [];
+  accounts.forEach(a => {
+    events.push({ date:a.dateLabel, sortKey:a.createdAt || '', text:`Cuenta creada: <b>${a.name}</b> · gasto ${fmt(a.spent)}`, color:'var(--accent)' });
+  });
+  trades.forEach(t => {
+    const label = t.pl < 0 ? 'Trade perdido' : (t.pl > 0 ? 'Trade ganado' : 'Trade en Break Even');
+    const color = t.pl < 0 ? 'var(--neg)' : (t.pl > 0 ? 'var(--pos)' : 'var(--text-faint)');
+    events.push({ date:t.date, sortKey:t.date, text:`${label} (${t.dir}) · ${fmtSigned(t.pl)}`, color });
+  });
+
+  const feedWrap = document.getElementById('dash-activity-feed');
+  if(events.length === 0){
+    feedWrap.innerHTML = '<p class="goal-empty">Todavía no hay actividad.</p>';
+  } else {
+    events.sort((a,b) => (b.sortKey || '').localeCompare(a.sortKey || ''));
+    const top = events.slice(0, 5);
+    feedWrap.innerHTML = top.map((e,i) => `
+      <div class="rank-row" style="gap:10px;align-items:flex-start;${i === top.length - 1 ? 'border-bottom:none;' : ''}">
+        <span style="width:7px;height:7px;border-radius:50%;background:${e.color};flex-shrink:0;margin-top:5px;"></span>
+        <div><div style="font-size:13px;">${e.text}</div><div style="font-size:11.5px;color:var(--text-faint);margin-top:2px;">${e.date}</div></div>
+      </div>
+    `).join('');
+  }
+
+  // --- Objetivos de la semana ---
+  const goalsWrap = document.getElementById('dash-goals-preview');
+  const totalGoals = tradingGoals.length + personalGoals.length;
+  if(totalGoals === 0){
+    goalsWrap.innerHTML = '<p style="font-size:12.5px;color:var(--text-faint);">Aún no has puesto objetivos esta semana.</p>';
+  } else {
+    const done = tradingGoals.filter(g => g.done).length + personalGoals.filter(g => g.done).length;
+    goalsWrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-muted);">${done} de ${totalGoals} objetivos completados esta semana.</p>`;
+  }
+}
+
 function updateDashboardFromAccounts(){
   const spent = accounts.reduce((s,a) => s + a.spent, 0);
   const payouts = accounts.reduce((s,a) => s + a.payouts, 0);
@@ -1417,6 +1543,8 @@ function updateDashboardFromAccounts(){
   const prTag = document.getElementById('dash-passrate-tag');
   prTag.textContent = passed + ' de ' + resolved.length + ' resueltas';
   prTag.style.color = passed === 0 ? 'var(--neg)' : 'var(--pos)';
+
+  renderDashboardOverview();
 }
 
 function showAccError(msg){
@@ -1452,7 +1580,7 @@ async function addAccount(){
 
   accounts.unshift({
     id:data.id, name:data.name, status:data.status, statusType:data.status_type,
-    size:Number(data.size), dateLabel:data.date_label, spent:Number(data.spent), payouts:Number(data.payouts)
+    size:Number(data.size), dateLabel:data.date_label, spent:Number(data.spent), payouts:Number(data.payouts), createdAt:data.created_at
   });
   renderAccounts();
 
