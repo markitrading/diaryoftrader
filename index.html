@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary of Trader</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -577,6 +578,15 @@
           <div class="metric"><div class="metric-label">Evals pasadas</div><div class="metric-value" id="dash-evals-passed">0</div></div>
           <div class="metric"><div class="metric-label">Passrate evals</div><div class="metric-value" id="dash-passrate">0%</div><div class="metric-delta" id="dash-passrate-tag" style="color:var(--neg);">0 de 1 resueltas</div></div>
           <div class="metric"><div class="metric-label">PNL journal</div><div class="metric-value neg" id="dash-pnl">-500,00 US$</div><div class="metric-delta" id="dash-pnl-tag">1 trade</div></div>
+        </div>
+        <div class="panel-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h3 style="margin:0;">Evolución del PNL acumulado</h3>
+            <span id="dash-chart-empty" style="font-size:12px;color:var(--text-faint);display:none;">Registra trades en el Journal para ver la curva.</span>
+          </div>
+          <div style="position:relative;height:220px;">
+            <canvas id="dash-pnl-chart"></canvas>
+          </div>
         </div>
         <div class="grid-2">
           <div class="panel-block">
@@ -1614,6 +1624,83 @@ function renderDashboardOverview(){
     const done = tradingGoals.filter(g => g.done).length + personalGoals.filter(g => g.done).length;
     goalsWrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-muted);">${done} de ${totalGoals} objetivos completados esta semana.</p>`;
   }
+
+  renderDashboardChart();
+}
+
+let dashChart = null;
+
+function renderDashboardChart(){
+  const canvas = document.getElementById('dash-pnl-chart');
+  const emptyMsg = document.getElementById('dash-chart-empty');
+  if(!canvas || typeof Chart === 'undefined') return;
+
+  const sorted = [...trades].sort((a, b) => a.date.localeCompare(b.date));
+
+  if(sorted.length === 0){
+    emptyMsg.style.display = 'inline';
+    if(dashChart){ dashChart.destroy(); dashChart = null; }
+    return;
+  }
+  emptyMsg.style.display = 'none';
+
+  let running = 0;
+  const labels = [];
+  const values = [];
+  sorted.forEach(t => {
+    running += t.pl;
+    labels.push(new Date(t.date + 'T00:00:00').toLocaleDateString('es-ES', { day:'2-digit', month:'short' }));
+    values.push(running);
+  });
+
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  const posColor = getComputedStyle(document.documentElement).getPropertyValue('--pos').trim();
+  const negColor = getComputedStyle(document.documentElement).getPropertyValue('--neg').trim();
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+  const lineColor = running >= 0 ? posColor : negColor;
+
+  if(dashChart){
+    dashChart.data.labels = labels;
+    dashChart.data.datasets[0].data = values;
+    dashChart.data.datasets[0].borderColor = lineColor;
+    dashChart.data.datasets[0].pointBackgroundColor = lineColor;
+    dashChart.update();
+    return;
+  }
+
+  dashChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: lineColor,
+        backgroundColor: 'transparent',
+        pointRadius: 2,
+        pointBackgroundColor: lineColor,
+        borderWidth: 2,
+        tension: 0.25
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ctx.parsed.y.toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' US$'
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 },
+              callback: (v) => v.toLocaleString('es-ES') + ' US$' } }
+      }
+    }
+  });
 }
 
 function updateDashboardFromAccounts(){
