@@ -544,9 +544,9 @@
         </li>
       </ul>
       <div class="side-foot">
-        <div class="avatar" id="side-foot-avatar">--</div>
+        <div class="avatar" id="side-foot-avatar" style="cursor:pointer;" onclick="openProfileView()">--</div>
         <div>
-          <div class="side-foot-name" id="side-foot-email" style="word-break:break-all;">—</div>
+          <div class="side-foot-name" id="side-foot-email" style="word-break:break-all;cursor:pointer;" onclick="openProfileView()">—</div>
           <div class="side-foot-role" style="cursor:pointer;" onclick="handleLogout()">Cerrar sesión</div>
         </div>
       </div>
@@ -1417,6 +1417,12 @@ function showView(id, el){
   document.getElementById('view-' + id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
+}
+
+function openProfileView(){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-profile').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 }
 
 let accounts = [];
