@@ -298,7 +298,15 @@
     cursor:pointer;
   }
   .acc-row:hover{border-color:var(--border);}
-  .acc-chev{color:var(--text-faint);font-size:14px;flex-shrink:0;}
+  .acc-chev{color:var(--text-faint);font-size:14px;flex-shrink:0;display:inline-block;transition:transform 0.15s;}
+  .acc-chev.open{transform:rotate(90deg);}
+  .acc-expand{
+    padding:16px 18px;margin-top:-1px;
+    border:1px solid var(--border-soft);border-top:none;
+    border-radius:0 0 var(--radius) var(--radius);
+    background:var(--panel-2);
+  }
+  .acc-expand-label{font-size:11px;letter-spacing:0.04em;color:var(--text-faint);margin-bottom:10px;}
   .acc-main{flex:1;}
   .acc-main .name-row{display:flex;align-items:center;gap:8px;}
   .acc-main .name-row .name{font-size:14px;font-weight:500;}
@@ -1270,7 +1278,7 @@ function populateAccountSelect(){
   const sel = document.getElementById('t-account');
   if(!sel) return;
   sel.innerHTML = '<option value="">Selecciona...</option>' +
-    accounts.map(a => '<option value="' + a.name + '">' + a.name + '</option>').join('');
+    accounts.filter(a => a.statusType !== 'neg').map(a => '<option value="' + a.name + '">' + a.name + '</option>').join('');
 }
 
 // ============ IMÁGENES DEL TRADE (DOL / Trade) ============
@@ -1577,8 +1585,19 @@ function renderAccounts(){
       const net = a.payouts - a.spent;
       const netColor = net < 0 ? 'var(--neg)' : (net > 0 ? 'var(--pos)' : 'var(--text)');
       const statusColor = a.statusType === 'neg' ? 'var(--neg)' : (a.statusType === 'pos' ? 'var(--pos)' : 'var(--text-faint)');
-      return `<div class="acc-row">
-        <span class="acc-chev">&rsaquo;</span>
+      const isOpen = expandedAccountId === a.id;
+      const expandHtml = isOpen ? `
+        <div class="acc-expand" onclick="event.stopPropagation();">
+          <div class="acc-expand-label">Estado de la cuenta</div>
+          <div class="toggle-group" style="max-width:460px;">
+            <button type="button" class="toggle-btn ${a.statusType === 'neutral' ? 'picked' : ''}" onclick="updateAccountStatus('${a.id}', 'En evaluación', 'neutral')">En evaluación</button>
+            <button type="button" class="toggle-btn ${a.statusType === 'pos' ? 'picked' : ''}" onclick="updateAccountStatus('${a.id}', 'Fondeada', 'pos')">Fondeada</button>
+            <button type="button" class="toggle-btn ${a.statusType === 'neg' ? 'picked' : ''}" onclick="updateAccountStatus('${a.id}', 'Eval quemada', 'neg')">Quemada</button>
+          </div>
+          <p style="font-size:11.5px;color:var(--text-faint);margin-top:10px;">Las cuentas marcadas como "Quemada" dejan de estar disponibles para elegir al registrar un trade nuevo en el Journal.</p>
+        </div>` : '';
+      return `<div class="acc-row" onclick="toggleAccountExpand('${a.id}')">
+        <span class="acc-chev${isOpen ? ' open' : ''}">&rsaquo;</span>
         <div class="acc-main">
           <div class="name-row">
             <span class="name">${a.name}</span>
@@ -1592,10 +1611,25 @@ function renderAccounts(){
           <div class="acc-figure"><div class="flabel">NETO</div><div class="fvalue" style="color:${netColor};">${net < 0 ? '-' : ''}${fmt(Math.abs(net))}</div></div>
         </div>
         <button class="acc-del" onclick="event.stopPropagation();deleteAccount('${a.id}')" title="Eliminar cuenta">&times;</button>
-      </div>`;
+      </div>${expandHtml}`;
     }).join('');
   }
   updateDashboardFromAccounts();
+}
+
+let expandedAccountId = null;
+
+function toggleAccountExpand(id){
+  expandedAccountId = (expandedAccountId === id) ? null : id;
+  renderAccounts();
+}
+
+async function updateAccountStatus(id, status, statusType){
+  const { error } = await sb.from('accounts').update({ status, status_type: statusType }).eq('id', id).eq('user_email', currentUser.email);
+  if(error){ console.error(error); return; }
+  const acc = accounts.find(a => a.id === id);
+  if(acc){ acc.status = status; acc.statusType = statusType; }
+  renderAccounts();
 }
 
 function renderDashboardOverview(){
