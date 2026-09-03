@@ -795,7 +795,7 @@
           <div class="modal-head">
             <div style="display:flex;align-items:center;gap:10px;">
               <div class="modal-icon">W</div>
-              <span style="font-size:14px;font-weight:500;">Nuevo trade</span>
+              <span style="font-size:14px;font-weight:500;" id="trade-modal-title">Nuevo trade</span>
             </div>
             <button class="modal-close" onclick="closeTradeModal()">&times;</button>
           </div>
@@ -885,7 +885,7 @@
             <p id="trade-error" style="display:none;font-size:12px;color:var(--neg);margin-top:14px;text-align:right;"></p>
             <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px;">
               <button class="btn-line" onclick="closeTradeModal()">Cancelar</button>
-              <button class="btn-primary" style="width:auto;padding:10px 18px;margin-top:0;" onclick="saveTrade()">Guardar trade</button>
+              <button class="btn-primary" style="width:auto;padding:10px 18px;margin-top:0;" onclick="saveTrade()" id="trade-save-btn">Guardar trade</button>
             </div>
           </div>
         </div>
@@ -902,6 +902,10 @@
             <button class="modal-close" onclick="closeViewTradeModal()">&times;</button>
           </div>
           <div class="modal-body" id="vt-body"></div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;padding:0 20px 20px;">
+            <button class="btn-line" onclick="closeViewTradeModal()">Cerrar</button>
+            <button class="btn-primary" style="width:auto;padding:10px 18px;margin-top:0;" onclick="editCurrentTrade()">Editar</button>
+          </div>
         </div>
       </div>
 
@@ -1319,11 +1323,12 @@ function goToday(){
   renderCalendar();
 }
 
-function populateAccountSelect(){
+function populateAccountSelect(includeName){
   const sel = document.getElementById('t-account');
   if(!sel) return;
+  const list = accounts.filter(a => a.statusType !== 'neg' || a.name === includeName);
   sel.innerHTML = '<option value="">Selecciona...</option>' +
-    accounts.filter(a => a.statusType !== 'neg').map(a => '<option value="' + a.name + '">' + a.name + '</option>').join('');
+    list.map(a => '<option value="' + a.name + '">' + a.name + '</option>').join('');
 }
 
 // ============ IMÁGENES DEL TRADE (DOL / Trade) ============
@@ -1422,9 +1427,13 @@ function renderImgGallery(images){
     </div>`).join('') + '</div>';
 }
 
+let viewingTradeId = null;
+let editingTradeId = null;
+
 function openViewTradeModal(id){
   const t = trades.find(x => x.id === id);
   if(!t) return;
+  viewingTradeId = id;
 
   const outcomeLetter = t.pl > 0 ? 'W' : (t.pl < 0 ? 'L' : 'E');
   const outcomeColor = t.pl > 0 ? 'var(--pos)' : (t.pl < 0 ? 'var(--neg)' : 'var(--text-faint)');
@@ -1460,17 +1469,61 @@ function openViewTradeModal(id){
 }
 function closeViewTradeModal(){
   document.getElementById('view-trade-modal').classList.remove('open');
+  viewingTradeId = null;
 }
 
-function openTradeModal(){
-  populateAccountSelect();
-  modalImages = { dol: [], trade: [] };
+function editCurrentTrade(){
+  const t = trades.find(x => x.id === viewingTradeId);
+  if(!t) return;
+  closeViewTradeModal();
+  openTradeModal(t);
+}
+
+function openTradeModal(trade){
+  editingTradeId = trade ? trade.id : null;
+  populateAccountSelect(trade ? trade.account : null);
+
+  document.getElementById('trade-modal-title').textContent = trade ? 'Editar trade' : 'Nuevo trade';
+  document.getElementById('trade-save-btn').textContent = trade ? 'Guardar cambios' : 'Guardar trade';
+  document.getElementById('trade-error').style.display = 'none';
+
+  if(trade){
+    document.getElementById('t-date').value = trade.date;
+    document.getElementById('t-dir').value = trade.dir;
+    document.getElementById('t-pl').value = trade.pl;
+    document.getElementById('t-account').value = trade.account || '';
+    document.getElementById('t-session').value = trade.session || 'Nueva York';
+    document.getElementById('t-window').value = trade.window || '';
+    document.getElementById('t-dol').value = trade.dol || '';
+    document.getElementById('t-desc').value = trade.desc || '';
+    document.getElementById('t-notes').value = trade.notes || '';
+    modalImages = { dol: [...(trade.dolImages || [])], trade: [...(trade.tradeImages || [])] };
+
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('picked'));
+    if(trade.control){
+      const b = document.querySelector('#t-control .toggle-btn[data-val="' + trade.control + '"]');
+      if(b) b.classList.add('picked');
+    }
+    if(trade.mgmt){
+      const b = document.querySelector('#t-mgmt .toggle-btn[data-val="' + trade.mgmt + '"]');
+      if(b) b.classList.add('picked');
+    }
+  } else {
+    ['t-date','t-pl','t-window','t-dol','t-desc','t-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('t-dir').value = '';
+    document.getElementById('t-account').value = '';
+    document.getElementById('t-session').value = 'Nueva York';
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('picked'));
+    modalImages = { dol: [], trade: [] };
+  }
+
   renderImagePreviews('dol');
   renderImagePreviews('trade');
   document.getElementById('trade-modal').classList.add('open');
 }
 function closeTradeModal(){
   document.getElementById('trade-modal').classList.remove('open');
+  editingTradeId = null;
 }
 
 async function saveTrade(){
@@ -1489,8 +1542,7 @@ async function saveTrade(){
   const controlBtn = document.querySelector('#t-control .picked');
   const mgmtBtn = document.querySelector('#t-mgmt .picked');
 
-  const { data, error } = await sb.from('trades').insert({
-    user_email: currentUser.email,
+  const payload = {
     date, dir, pl,
     account: document.getElementById('t-account').value,
     session: document.getElementById('t-session').value,
@@ -1502,7 +1554,15 @@ async function saveTrade(){
     notes: document.getElementById('t-notes').value,
     dol_images: modalImages.dol,
     trade_images: modalImages.trade
-  }).select().single();
+  };
+
+  let data, error;
+  if(editingTradeId){
+    ({ data, error } = await sb.from('trades').update(payload)
+      .eq('id', editingTradeId).eq('user_email', currentUser.email).select().single());
+  } else {
+    ({ data, error } = await sb.from('trades').insert({ ...payload, user_email: currentUser.email }).select().single());
+  }
 
   if(error){
     errEl.textContent = 'Error al guardar: ' + error.message;
@@ -1510,11 +1570,18 @@ async function saveTrade(){
     return;
   }
 
-  trades.push({
+  const mapped = {
     id:data.id, date:data.date, dir:data.dir, pl:Number(data.pl), account:data.account, session:data.session,
     window:data.entry_window, control:data.control, mgmt:data.mgmt, dol:data.dol, desc:data.description, notes:data.notes,
     dolImages:data.dol_images || [], tradeImages:data.trade_images || []
-  });
+  };
+
+  if(editingTradeId){
+    const idx = trades.findIndex(t => t.id === editingTradeId);
+    if(idx > -1) trades[idx] = mapped; else trades.push(mapped);
+  } else {
+    trades.push(mapped);
+  }
 
   renderJournalMetrics();
   renderCalendar();
