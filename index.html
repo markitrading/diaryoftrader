@@ -1238,16 +1238,15 @@ function loadPriceTicker(){
   script.async = true;
   script.innerHTML = JSON.stringify({
     symbols: [
-      { proName: 'CME_MINI:NQ1!', title: 'NQ' },
-      { proName: 'CME_MINI:ES1!', title: 'ES' },
-      { proName: 'CBOT_MINI:YM1!', title: 'US30' },
-      { proName: 'TVC:DXY', title: 'DXY' },
-      { proName: 'NASDAQ:QQQ', title: 'QQQ' },
-      { proName: 'TVC:US05Y', title: 'US 5Y' },
-      { proName: 'TVC:US10Y', title: 'US 10Y' },
-      { proName: 'TVC:US30Y', title: 'US 30Y' },
-      { proName: 'COMEX:GC1!', title: 'Oro' },
-      { proName: 'NYMEX:CL1!', title: 'Crudo' }
+      { proName: 'AMEX:SPY', title: 'S&P 500' },
+      { proName: 'NASDAQ:QQQ', title: 'Nasdaq' },
+      { proName: 'AMEX:DIA', title: 'Dow Jones' },
+      { proName: 'AMEX:UUP', title: 'Dólar (DXY)' },
+      { proName: 'NASDAQ:IEI', title: 'Bono 5A' },
+      { proName: 'NASDAQ:IEF', title: 'Bono 10A' },
+      { proName: 'NASDAQ:TLT', title: 'Bono 30A' },
+      { proName: 'AMEX:GLD', title: 'Oro' },
+      { proName: 'AMEX:USO', title: 'Crudo' }
     ],
     colorTheme: 'dark',
     isTransparent: true,
