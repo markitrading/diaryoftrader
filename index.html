@@ -556,6 +556,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h11a1 1 0 0 1 1 1v16l-3-2-2 2-2-2-2 2-3-2V4a1 1 0 0 1 1-1z"/></svg>
           Journal
         </li>
+        <li class="nav-item" onclick="showView('news', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="14" height="16" rx="1.5"/><path d="M7 8h6M7 12h6M7 16h3"/><path d="M17 8h3a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H7"/></svg>
+          Noticias
+        </li>
         <li class="nav-item" onclick="showView('goals', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>
           Objetivos
@@ -625,14 +629,14 @@
           <div class="panel-block">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
               <h3 style="margin:0;">Objetivos de la semana</h3>
-              <button class="btn-line" onclick="showView('goals', document.querySelector('.nav-item:nth-child(4)'))">Ver objetivos</button>
+              <button class="btn-line" onclick="showView('goals', document.querySelector('.nav-item:nth-child(5)'))">Ver objetivos</button>
             </div>
             <div id="dash-goals-preview"><p style="font-size:12.5px;color:var(--text-faint);">Aún no has puesto objetivos esta semana.</p></div>
           </div>
           <div class="panel-block">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
               <h3 style="margin:0;">Leaderboard</h3>
-              <button class="btn-line" onclick="showView('leaderboard', document.querySelector('.nav-item:nth-child(7)'))">Ver ranking</button>
+              <button class="btn-line" onclick="showView('leaderboard', document.querySelector('.nav-item:nth-child(8)'))">Ver ranking</button>
             </div>
             <div class="rank-row" style="border-bottom:none;" id="dash-leaderboard-row">
               <div class="rank-num" style="width:auto;color:var(--text-faint);">—</div>
@@ -786,6 +790,19 @@
             <button class="btn-line" onclick="goToday()">Hoy</button>
           </div>
           <div class="cal-grid" id="cal-grid"></div>
+        </div>
+      </div>
+
+      <!-- NOTICIAS -->
+      <div class="view" id="view-news">
+        <div class="page-head">
+          <h1>Noticias</h1>
+          <p>Titulares de mercado en tiempo real, se actualiza sola.</p>
+        </div>
+        <div class="panel-block" style="padding:0;overflow:hidden;">
+          <div class="tradingview-widget-container" id="tv-news-widget">
+            <div class="tradingview-widget-container__widget"></div>
+          </div>
         </div>
       </div>
 
@@ -1719,6 +1736,28 @@ function showView(id, el){
   document.getElementById('view-' + id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
+  if(id === 'news') loadNewsWidget();
+}
+
+let newsWidgetLoaded = false;
+function loadNewsWidget(){
+  if(newsWidgetLoaded) return;
+  newsWidgetLoaded = true;
+  const container = document.getElementById('tv-news-widget');
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
+  script.async = true;
+  script.innerHTML = JSON.stringify({
+    feedMode: 'all_symbols',
+    isTransparent: true,
+    displayMode: 'regular',
+    width: '100%',
+    height: '620',
+    colorTheme: 'dark',
+    locale: 'es'
+  });
+  container.appendChild(script);
 }
 
 function openProfileView(){
