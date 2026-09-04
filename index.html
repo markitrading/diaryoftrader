@@ -640,6 +640,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4"/><path d="M17 6h3a3 3 0 0 1-3 4"/></svg>
           Leaderboard
         </li>
+        <li class="nav-item" onclick="showView('bias', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
+          Sesgo de mercado
+        </li>
         <li class="nav-item" id="nav-admin" style="display:none;" onclick="showView('admin', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>
           Admin
@@ -1071,6 +1075,35 @@
         </div>
         <div class="panel-block" id="leaderboard-list">
           <p class="goal-empty">Todavía no hay datos suficientes para el ranking.</p>
+        </div>
+      </div>
+
+      <!-- SESGO DE MERCADO -->
+      <div class="view" id="view-bias">
+        <div class="page-head">
+          <h1>Sesgo de mercado</h1>
+          <p>Lectura técnica y posicionamiento institucional en Nasdaq, S&amp;P 500 y Dow Jones. No es una predicción — es un resumen de datos públicos, actualizado solo.</p>
+        </div>
+
+        <div class="panel-block">
+          <h3>Posicionamiento institucional (informe CFTC, semanal)</h3>
+          <p style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">Cuánto tienen comprado o vendido los grandes gestores institucionales (Asset Manager / Institutional) en cada futuro, según el informe público "Traders in Financial Futures" de la CFTC. Se publica cada viernes.</p>
+          <div class="grid-3" id="cot-positioning-cards">
+            <p class="goal-empty">Cargando posicionamiento…</p>
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <h3>Nasdaq (QQQ) — lectura técnica diaria</h3>
+          <div class="tradingview-widget-container" id="ta-nasdaq"><div class="tradingview-widget-container__widget"></div></div>
+        </div>
+        <div class="panel-block">
+          <h3>S&amp;P 500 (SPY) — lectura técnica diaria</h3>
+          <div class="tradingview-widget-container" id="ta-sp500"><div class="tradingview-widget-container__widget"></div></div>
+        </div>
+        <div class="panel-block">
+          <h3>Dow Jones (DIA) — lectura técnica diaria</h3>
+          <div class="tradingview-widget-container" id="ta-us30"><div class="tradingview-widget-container__widget"></div></div>
         </div>
       </div>
 
@@ -2006,6 +2039,61 @@ function showView(id, el){
   el.classList.add('active');
   document.getElementById('main-content').classList.toggle('wide', id === 'news');
   if(id === 'news') loadNews();
+  if(id === 'bias'){ loadTechnicalWidgets(); loadPositioningCards(); }
+}
+
+let biasWidgetsLoaded = false;
+function loadTechnicalWidgets(){
+  if(biasWidgetsLoaded) return;
+  biasWidgetsLoaded = true;
+  [
+    { id:'ta-nasdaq', symbol:'NASDAQ:QQQ' },
+    { id:'ta-sp500', symbol:'AMEX:SPY' },
+    { id:'ta-us30', symbol:'AMEX:DIA' }
+  ].forEach(c => {
+    const container = document.getElementById(c.id);
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      interval: '1D',
+      width: '100%',
+      isTransparent: true,
+      height: 260,
+      symbol: c.symbol,
+      showIntervalTabs: false,
+      displayMode: 'single',
+      locale: 'es',
+      colorTheme: 'dark'
+    });
+    container.appendChild(script);
+  });
+}
+
+async function loadPositioningCards(){
+  const wrap = document.getElementById('cot-positioning-cards');
+  const { data, error } = await sb.from('institutional_positioning').select('*');
+  if(error){
+    wrap.innerHTML = '<p class="goal-empty">No se pudo cargar el posicionamiento: ' + error.message + '</p>';
+    return;
+  }
+  if(!data || data.length === 0){
+    wrap.innerHTML = '<p class="goal-empty">Todavía no hay datos de posicionamiento cargados.</p>';
+    return;
+  }
+  const labels = { nasdaq:'Nasdaq (E-mini)', sp500:'S&P 500 (E-mini)', us30:'Dow Jones ($5)' };
+  const order = ['nasdaq','sp500','us30'];
+  const biasColor = { bullish:'var(--pos)', bearish:'var(--neg)', neutral:'var(--text-faint)' };
+  const biasLabel = { bullish:'Bullish', bearish:'Bearish', neutral:'Neutral' };
+  const rows = [...data].sort((a,b) => order.indexOf(a.asset) - order.indexOf(b.asset));
+  wrap.innerHTML = rows.map(row => `
+    <div class="metric">
+      <div class="metric-label">${labels[row.asset] || row.asset}</div>
+      <div class="metric-value" style="color:${biasColor[row.bias] || 'var(--text)'};font-size:18px;">${biasLabel[row.bias] || row.bias || '—'}</div>
+      <div class="metric-delta">Neto: ${row.net_position > 0 ? '+' : ''}${row.net_position} contratos${row.report_date ? ' · ' + row.report_date : ''}</div>
+    </div>
+  `).join('');
 }
 
 let newsSubscribed = false;
