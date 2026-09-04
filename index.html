@@ -797,12 +797,10 @@
       <div class="view" id="view-news">
         <div class="page-head">
           <h1>Noticias</h1>
-          <p>Titulares de mercado en tiempo real, se actualiza sola.</p>
+          <p>Titulares de Financial Juice, desde tu canal de Discord.</p>
         </div>
-        <div class="panel-block" style="padding:0;overflow:hidden;">
-          <div class="tradingview-widget-container" id="tv-news-widget">
-            <div class="tradingview-widget-container__widget"></div>
-          </div>
+        <div class="panel-block" id="news-list">
+          <p class="goal-empty">Cargando noticias…</p>
         </div>
       </div>
 
@@ -1736,28 +1734,55 @@ function showView(id, el){
   document.getElementById('view-' + id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
-  if(id === 'news') loadNewsWidget();
+  if(id === 'news') loadNews();
 }
 
-let newsWidgetLoaded = false;
-function loadNewsWidget(){
-  if(newsWidgetLoaded) return;
-  newsWidgetLoaded = true;
-  const container = document.getElementById('tv-news-widget');
-  const script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
-  script.async = true;
-  script.innerHTML = JSON.stringify({
-    feedMode: 'all_symbols',
-    isTransparent: true,
-    displayMode: 'regular',
-    width: '100%',
-    height: '620',
-    colorTheme: 'dark',
-    locale: 'es'
-  });
-  container.appendChild(script);
+let newsSubscribed = false;
+
+function timeAgo(dateStr){
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if(mins < 1) return 'ahora mismo';
+  if(mins < 60) return 'hace ' + mins + ' min';
+  const hours = Math.floor(mins / 60);
+  if(hours < 24) return 'hace ' + hours + (hours === 1 ? ' hora' : ' horas');
+  const days = Math.floor(hours / 24);
+  return 'hace ' + days + (days === 1 ? ' día' : ' días');
+}
+
+function renderNewsList(items){
+  const wrap = document.getElementById('news-list');
+  if(!items || items.length === 0){
+    wrap.innerHTML = '<p class="goal-empty">Todavía no hay noticias guardadas. En cuanto el bot publique algo en Discord, aparecerá aquí.</p>';
+    return;
+  }
+  wrap.innerHTML = items.map(n => `
+    <div class="rank-row" style="gap:10px;align-items:flex-start;">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px;"></span>
+      <div style="flex:1;">
+        <div style="font-size:13.5px;line-height:1.5;">${escapeHtml(n.content)}</div>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:3px;">${timeAgo(n.posted_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadNews(){
+  const { data, error } = await sb.from('news_items').select('*').order('posted_at', { ascending:false }).limit(50);
+  if(error){
+    document.getElementById('news-list').innerHTML = '<p class="goal-empty">No se pudieron cargar las noticias: ' + error.message + '</p>';
+    return;
+  }
+  renderNewsList(data);
+
+  if(!newsSubscribed){
+    newsSubscribed = true;
+    sb.channel('news-live')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'news_items' }, () => {
+        loadNews();
+      })
+      .subscribe();
+  }
 }
 
 function openProfileView(){
