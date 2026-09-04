@@ -164,7 +164,7 @@
     color:var(--text-faint);
     letter-spacing:0.02em;
     padding-left:100%;
-    animation:ticker-scroll 26s linear infinite;
+    animation:ticker-scroll 55s linear infinite;
   }
   .ticker-track b{color:var(--accent);font-weight:500;}
   @keyframes ticker-scroll{
@@ -1284,6 +1284,21 @@ async function loadLeaderboard(){
 let tickerLeader = null;
 let tickerStreak = null;
 
+const TICKER_QUOTES = [
+  'La disciplina paga más que la suerte.',
+  'El plan se sigue, no se improvisa.',
+  'Corta las pérdidas rápido, deja correr las ganancias.',
+  'El mercado estará ahí mañana, tu capital también debería.',
+  'Cada trade es un dato, no un veredicto.',
+  'Gestiona el riesgo antes de gestionar el beneficio.',
+  'La paciencia es una posición.',
+  'No hay setup perfecto, hay setups con ventaja.',
+  'Journaling constante, resultados constantes.',
+  'El overtrading no es más oportunidad, es menos ventaja.',
+  'Respeta el stop, respeta el proceso.',
+  'Lo que no se mide, no se mejora.'
+];
+
 function updateTickerTape(){
   const track = document.getElementById('ticker-track');
   if(!track) return;
@@ -1295,6 +1310,7 @@ function updateTickerTape(){
     const word = tickerStreak.type === 'win' ? 'ganancias' : 'pérdidas';
     parts.push(`Tu racha: <b>${tickerStreak.count} ${word} seguidas</b>`);
   }
+  TICKER_QUOTES.forEach(q => parts.push(escapeHtml(q)));
   track.innerHTML = parts.join('&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;');
 }
 
