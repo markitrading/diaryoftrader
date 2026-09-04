@@ -189,6 +189,7 @@
   .side-foot-role{font-size:11px;color:var(--text-faint);}
 
   .main{flex:1;padding:28px 36px;max-width:1040px;}
+  .main.wide{max-width:none;}
   .page-head{margin-bottom:24px;}
   .page-head h1{font-size:21px;font-weight:500;margin-bottom:5px;}
   .page-head p{font-size:13.5px;color:var(--text-muted);}
@@ -590,7 +591,7 @@
       </div>
     </div>
 
-    <div class="main">
+    <div class="main" id="main-content">
 
       <!-- DASHBOARD -->
       <div class="view active" id="view-dashboard">
@@ -1734,6 +1735,7 @@ function showView(id, el){
   document.getElementById('view-' + id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('main-content').classList.toggle('wide', id === 'news');
   if(id === 'news') loadNews();
 }
 
@@ -1789,6 +1791,7 @@ function openProfileView(){
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-profile').classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('main-content').classList.remove('wide');
 }
 
 let accounts = [];
