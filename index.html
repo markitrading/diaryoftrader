@@ -149,7 +149,8 @@
 
   /* ---------- APP SHELL ---------- */
   #app-view{display:none;min-height:100vh;}
-  .shell{display:flex;min-height:calc(100vh - 30px);}
+  .shell{display:flex;min-height:calc(100vh - 76px);}
+  .price-ticker-wrap{border-bottom:1px solid var(--border-soft);background:var(--panel);}
 
   .ticker-strip{
     height:30px;overflow:hidden;
@@ -591,6 +592,11 @@
 
 <!-- ============ APP VIEW ============ -->
 <div id="app-view">
+  <div class="price-ticker-wrap" id="price-ticker-wrap">
+    <div class="tradingview-widget-container" id="tv-ticker-tape">
+      <div class="tradingview-widget-container__widget"></div>
+    </div>
+  </div>
   <div class="ticker-strip">
     <div class="ticker-track" id="ticker-track">Diary of Trader</div>
   </div>
@@ -1210,6 +1216,7 @@ async function onLoggedIn(email){
   document.getElementById('side-foot-avatar').textContent = email.slice(0,2).toUpperCase();
   document.getElementById('profile-email').textContent = email;
   document.getElementById('nav-admin').style.display = currentUser.isAdmin ? 'flex' : 'none';
+  loadPriceTicker();
 
   const { data: profile } = await sb.from('profiles').select('full_name').eq('user_email', email).maybeSingle();
   currentUser.fullName = profile ? profile.full_name : '';
@@ -1218,6 +1225,36 @@ async function onLoggedIn(email){
 
   await Promise.all([loadAccounts(), loadTrades(), loadGoals(), loadLeaderboard()]);
   if(currentUser.isAdmin) loadAllowedEmails();
+}
+
+let priceTickerLoaded = false;
+function loadPriceTicker(){
+  if(priceTickerLoaded) return;
+  priceTickerLoaded = true;
+  const container = document.getElementById('tv-ticker-tape');
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
+  script.async = true;
+  script.innerHTML = JSON.stringify({
+    symbols: [
+      { proName: 'CME_MINI:NQ1!', title: 'NQ' },
+      { proName: 'CME_MINI:ES1!', title: 'ES' },
+      { proName: 'CBOT_MINI:YM1!', title: 'US30' },
+      { proName: 'TVC:DXY', title: 'DXY' },
+      { proName: 'NASDAQ:QQQ', title: 'QQQ' },
+      { proName: 'TVC:US05Y', title: 'US 5Y' },
+      { proName: 'TVC:US10Y', title: 'US 10Y' },
+      { proName: 'TVC:US30Y', title: 'US 30Y' },
+      { proName: 'COMEX:GC1!', title: 'Oro' },
+      { proName: 'NYMEX:CL1!', title: 'Crudo' }
+    ],
+    colorTheme: 'dark',
+    isTransparent: true,
+    displayMode: 'compact',
+    locale: 'es'
+  });
+  container.appendChild(script);
 }
 
 async function saveProfileName(){
