@@ -29,13 +29,23 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{
-    background:var(--bg);
+    background:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 42px 42px,
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 42px 42px,
+      var(--bg);
     color:var(--text);
     font-family:'Space Grotesk',sans-serif;
     min-height:100vh;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
   ::selection{background:var(--accent-dim);color:#fff;}
+
+  .grid-texture{
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size:44px 44px;
+  }
 
   /* ---------- LOGIN ---------- */
   #login-view{
@@ -45,7 +55,8 @@
     justify-content:center;
     padding:24px;
     background:
-      radial-gradient(circle at 20% 20%, rgba(200,155,76,0.06), transparent 40%),
+      radial-gradient(circle at 18% 15%, rgba(121,184,236,0.07), transparent 42%),
+      radial-gradient(circle at 85% 90%, rgba(95,174,126,0.05), transparent 40%),
       var(--bg);
   }
   .login-box{
@@ -112,8 +123,10 @@
     font-size:14px;
     cursor:pointer;
     margin-top:8px;
+    transition:transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
-  .btn-primary:hover{background:#93C8F2;}
+  .btn-primary:hover{background:#93C8F2;transform:translateY(-1px);box-shadow:0 8px 20px rgba(121,184,236,0.25);}
+  .btn-primary:active{transform:translateY(0);}
   .login-foot{
     display:flex;
     justify-content:space-between;
@@ -136,7 +149,31 @@
 
   /* ---------- APP SHELL ---------- */
   #app-view{display:none;min-height:100vh;}
-  .shell{display:flex;min-height:100vh;}
+  .shell{display:flex;min-height:calc(100vh - 30px);}
+
+  .ticker-strip{
+    height:30px;overflow:hidden;
+    background:var(--panel);
+    border-bottom:1px solid var(--border-soft);
+    display:flex;align-items:center;
+  }
+  .ticker-track{
+    white-space:nowrap;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--text-faint);
+    letter-spacing:0.02em;
+    padding-left:100%;
+    animation:ticker-scroll 26s linear infinite;
+  }
+  .ticker-track b{color:var(--accent);font-weight:500;}
+  @keyframes ticker-scroll{
+    from{transform:translateX(0);}
+    to{transform:translateX(-100%);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{animation:none;padding-left:16px;}
+  }
 
   .sidebar{
     width:220px;
@@ -163,8 +200,9 @@
     font-size:13.5px;
     cursor:pointer;
     border:1px solid transparent;
+    transition:background 0.15s ease, color 0.15s ease, transform 0.15s ease;
   }
-  .nav-item:hover{background:var(--panel-2);color:var(--text);}
+  .nav-item:hover{background:var(--panel-2);color:var(--text);transform:translateX(2px);}
   .nav-item.active{
     background:var(--accent-bg);
     color:var(--accent);
@@ -203,7 +241,9 @@
     border:1px solid var(--border-soft);
     border-radius:var(--radius);
     padding:16px;
+    transition:transform 0.15s, box-shadow 0.15s, border-color 0.15s;
   }
+  .metric[onclick]:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.3);border-color:var(--border);}
   .metric-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;}
   .metric-value{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:500;}
   .metric-value.pos{color:var(--pos);}
@@ -251,8 +291,10 @@
     font-family:inherit;
     font-size:12.5px;
     cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
-  .btn-line:hover{border-color:var(--accent-dim);color:var(--accent);}
+  .btn-line:hover{border-color:var(--accent-dim);color:var(--accent);transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,0.3);}
+  .btn-line:active{transform:translateY(0);}
 
   .view{display:none;}
   .view.active{display:block;}
@@ -297,8 +339,9 @@
     border-radius:var(--radius);
     margin-top:12px;
     cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   }
-  .acc-row:hover{border-color:var(--border);}
+  .acc-row:hover{border-color:var(--border);transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,0,0,0.3);}
   .acc-chev{color:var(--text-faint);font-size:14px;flex-shrink:0;display:inline-block;transition:transform 0.15s;}
   .acc-chev.open{transform:rotate(90deg);}
   .acc-expand{
@@ -456,7 +499,11 @@
   }
   .goal-add-row input::placeholder{color:var(--text-faint);}
   .goal-add-btn{width:auto;padding:9px 16px;margin-top:0;white-space:nowrap;}
-  .goal-empty{font-size:12.5px;color:var(--text-faint);}
+  .goal-empty{font-size:12.5px;color:var(--text-faint);display:flex;align-items:center;gap:9px;}
+  .goal-empty::before{
+    content:'';flex-shrink:0;width:7px;height:7px;border-radius:50%;
+    border:1.4px dashed var(--border);
+  }
   .goal-row{
     display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft);
   }
@@ -504,7 +551,7 @@
   }
 </style>
 </head>
-<body>
+<body class="grid-texture">
 
 <!-- ============ LOGIN VIEW ============ -->
 <div id="login-view">
@@ -544,6 +591,9 @@
 
 <!-- ============ APP VIEW ============ -->
 <div id="app-view">
+  <div class="ticker-strip">
+    <div class="ticker-track" id="ticker-track">Diary of Trader</div>
+  </div>
   <div class="shell">
 
     <div class="sidebar">
@@ -612,7 +662,7 @@
           <div class="metric"><div class="metric-label">Retorno neto</div><div class="metric-value neg" id="dash-net">-80,00 US$</div><div class="metric-delta" id="dash-net-tag" style="color:var(--neg);">vs. gastado</div></div>
           <div class="metric"><div class="metric-label">Evals pasadas</div><div class="metric-value" id="dash-evals-passed">0</div></div>
           <div class="metric"><div class="metric-label">Passrate evals</div><div class="metric-value" id="dash-passrate">0%</div><div class="metric-delta" id="dash-passrate-tag" style="color:var(--neg);">0 de 1 resueltas</div></div>
-          <div class="metric"><div class="metric-label">PNL journal</div><div class="metric-value neg" id="dash-pnl">-500,00 US$</div><div class="metric-delta" id="dash-pnl-tag">1 trade</div></div>
+          <div class="metric"><div class="metric-label">PNL journal</div><div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;"><div class="metric-value neg" id="dash-pnl">-500,00 US$</div><svg id="dash-pnl-spark" width="64" height="24" viewBox="0 0 64 24"></svg></div><div class="metric-delta" id="dash-pnl-tag">1 trade</div></div>
         </div>
         <div class="panel-block">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -1226,6 +1276,26 @@ async function loadLeaderboard(){
       <div class="rank-value"></div>
     `;
   }
+
+  tickerLeader = (top && top.length > 0) ? top[0] : null;
+  updateTickerTape();
+}
+
+let tickerLeader = null;
+let tickerStreak = null;
+
+function updateTickerTape(){
+  const track = document.getElementById('ticker-track');
+  if(!track) return;
+  const parts = ['<b>Diary of Trader</b>'];
+  if(tickerLeader){
+    parts.push(`Líder del ranking: <b>${escapeHtml(tickerLeader.display_name || 'Trader')}</b> · ${fmt(Number(tickerLeader.net))}`);
+  }
+  if(tickerStreak && tickerStreak.type){
+    const word = tickerStreak.type === 'win' ? 'ganancias' : 'pérdidas';
+    parts.push(`Tu racha: <b>${tickerStreak.count} ${word} seguidas</b>`);
+  }
+  track.innerHTML = parts.join('&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;');
 }
 
 async function handleLogout(){
@@ -1292,9 +1362,46 @@ function renderJournalMetrics(){
   dashPnl.textContent = fmtSigned(total).replace('+','');
   dashPnl.className = 'metric-value ' + (total < 0 ? 'neg' : (total > 0 ? 'pos' : ''));
   document.getElementById('dash-pnl-tag').textContent = trades.length + (trades.length === 1 ? ' trade' : ' trades');
+  drawPnlSparkline();
 
   renderDashboardOverview();
   renderAdvancedStats();
+}
+
+function animateNumber(el, to, formatter){
+  const duration = 650;
+  const start = performance.now();
+  function step(now){
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = formatter(to * eased);
+    if(t < 1) requestAnimationFrame(step);
+    else el.textContent = formatter(to);
+  }
+  requestAnimationFrame(step);
+}
+
+function drawPnlSparkline(){
+  const svg = document.getElementById('dash-pnl-spark');
+  if(!svg) return;
+  if(trades.length < 2){ svg.innerHTML = ''; return; }
+
+  const sorted = [...trades].sort((a,b) => a.date.localeCompare(b.date));
+  let running = 0;
+  const values = sorted.map(t => (running += t.pl));
+  const min = Math.min(0, ...values);
+  const max = Math.max(0, ...values);
+  const range = (max - min) || 1;
+  const w = 64, h = 24, pad = 2;
+
+  const points = values.map((v, i) => {
+    const x = pad + (i / (values.length - 1)) * (w - pad * 2);
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+
+  const color = values[values.length - 1] >= 0 ? 'var(--pos)' : 'var(--neg)';
+  svg.innerHTML = `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
 }
 
 function renderAdvancedStats(){
@@ -1323,6 +1430,9 @@ function renderAdvancedStats(){
   const streakLabel = streakType === null ? 'Sin racha'
     : (streakType === 'win' ? streak + (streak === 1 ? ' ganancia seguida' : ' ganancias seguidas') : streak + (streak === 1 ? ' pérdida seguida' : ' pérdidas seguidas'));
   const streakColor = streakType === 'win' ? 'var(--pos)' : (streakType === 'loss' ? 'var(--neg)' : 'var(--text-faint)');
+
+  tickerStreak = streakType && streakType !== 'be' ? { type:streakType, count:streak } : null;
+  updateTickerTape();
 
   // --- drawdown máximo (sobre la curva de PNL acumulado) ---
   let running = 0, peak = 0, maxDD = 0;
@@ -2153,8 +2263,8 @@ function updateDashboardFromAccounts(){
   const passed = accounts.filter(a => a.statusType === 'pos').length;
   const passrate = resolved.length ? Math.round((passed / resolved.length) * 100) : 0;
 
-  document.getElementById('dash-spent').textContent = fmt(spent);
-  document.getElementById('dash-payouts').textContent = fmt(payouts);
+  animateNumber(document.getElementById('dash-spent'), spent, fmt);
+  animateNumber(document.getElementById('dash-payouts'), payouts, fmt);
 
   const netEl = document.getElementById('dash-net');
   netEl.textContent = (net < 0 ? '-' : '') + fmt(Math.abs(net));
