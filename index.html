@@ -1145,7 +1145,7 @@
             </div>
             <div class="form-field">
               <label>Fecha del informe (domingo)</label>
-              <input type="date" id="report-date">
+              <input type="date" id="report-date" onchange="suggestReportTitle()">
             </div>
           </div>
           <div class="form-field" style="margin-top:16px;max-width:420px;">
@@ -2615,6 +2615,23 @@ async function loadReports(){
       <button class="acc-del" onclick="deleteReport('${r.id}', '${r.file_path}')" title="Eliminar informe">&times;</button>
     </div>
   `).join('');
+}
+
+function suggestReportTitle(){
+  const val = document.getElementById('report-date').value;
+  if(!val) return;
+  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const sunday = new Date(val + 'T00:00:00');
+  const start = new Date(sunday); start.setDate(sunday.getDate() + 1);
+  const end = new Date(sunday); end.setDate(sunday.getDate() + 7);
+
+  let label;
+  if(start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()){
+    label = `Análisis semana del ${start.getDate()} al ${end.getDate()} de ${months[start.getMonth()]} de ${start.getFullYear()}`;
+  } else {
+    label = `Análisis semana del ${start.getDate()} de ${months[start.getMonth()]} al ${end.getDate()} de ${months[end.getMonth()]} de ${end.getFullYear()}`;
+  }
+  document.getElementById('report-title').value = label;
 }
 
 async function uploadReport(){
