@@ -1131,7 +1131,7 @@
       <div class="view" id="view-bias">
         <div class="page-head">
           <h1>Sesgo de mercado</h1>
-          <p>Lectura técnica y posicionamiento institucional en Nasdaq, S&amp;P 500 y Dow Jones. No es una predicción — es un resumen de datos públicos, actualizado solo.</p>
+          <p>Curva de tipos, rotación sectorial, volatilidad y posicionamiento institucional. No es una predicción — es un resumen de datos públicos, actualizado solo.</p>
         </div>
 
         <div class="panel-block">
@@ -1143,16 +1143,26 @@
         </div>
 
         <div class="panel-block">
-          <h3>Nasdaq (QQQ) — lectura técnica diaria</h3>
-          <div class="tradingview-widget-container" id="ta-nasdaq"><div class="tradingview-widget-container__widget"></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <h3 style="margin-bottom:0;">Curva de tipos (Tesoro de EEUU)</h3>
+            <span id="yield-curve-note" style="font-size:11.5px;color:var(--text-faint);"></span>
+          </div>
+          <p style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">Rendimiento a distintos plazos, según datos oficiales de la Reserva Federal (FRED). Se actualiza cada día.</p>
+          <div style="position:relative;height:220px;">
+            <canvas id="yield-curve-chart"></canvas>
+          </div>
         </div>
+
         <div class="panel-block">
-          <h3>S&amp;P 500 (SPY) — lectura técnica diaria</h3>
-          <div class="tradingview-widget-container" id="ta-sp500"><div class="tradingview-widget-container__widget"></div></div>
+          <h3>Rotación sectorial</h3>
+          <p style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">Semiconductores (SOXX), tecnología (XLK) y consumo discrecional (XLY) — compara qué sector lidera o se queda atrás.</p>
+          <div class="tradingview-widget-container" id="sector-rotation-widget"><div class="tradingview-widget-container__widget"></div></div>
         </div>
+
         <div class="panel-block">
-          <h3>Dow Jones (DIA) — lectura técnica diaria</h3>
-          <div class="tradingview-widget-container" id="ta-us30"><div class="tradingview-widget-container__widget"></div></div>
+          <h3>Volatilidad (VIX)</h3>
+          <p style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">El "índice del miedo" de CBOE — sube cuando el mercado espera más movimiento/incertidumbre.</p>
+          <div class="tradingview-widget-container" id="vix-widget"><div class="tradingview-widget-container__widget"></div></div>
         </div>
       </div>
 
@@ -2142,37 +2152,130 @@ function showView(id, el){
   el.classList.add('active');
   document.getElementById('main-content').classList.toggle('wide', id === 'news');
   if(id === 'news') loadNews();
-  if(id === 'bias'){ loadTechnicalWidgets(); loadPositioningCards(); }
+  if(id === 'bias'){ loadBiasWidgets(); loadPositioningCards(); loadYieldCurve(); }
   if(id === 'reports') loadReports();
   if(id === 'assistant') initChatIfEmpty();
 }
 
 let biasWidgetsLoaded = false;
-function loadTechnicalWidgets(){
+function loadBiasWidgets(){
   if(biasWidgetsLoaded) return;
   biasWidgetsLoaded = true;
-  [
-    { id:'ta-nasdaq', symbol:'NASDAQ:QQQ' },
-    { id:'ta-sp500', symbol:'AMEX:SPY' },
-    { id:'ta-us30', symbol:'AMEX:DIA' }
-  ].forEach(c => {
-    const container = document.getElementById(c.id);
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      interval: '1D',
-      width: '100%',
-      isTransparent: true,
-      height: 260,
-      symbol: c.symbol,
-      showIntervalTabs: false,
-      displayMode: 'single',
-      locale: 'es',
-      colorTheme: 'dark'
-    });
-    container.appendChild(script);
+
+  const sectorContainer = document.getElementById('sector-rotation-widget');
+  const sectorScript = document.createElement('script');
+  sectorScript.type = 'text/javascript';
+  sectorScript.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+  sectorScript.async = true;
+  sectorScript.innerHTML = JSON.stringify({
+    symbols: [
+      ['AMEX:SOXX|1D'],
+      ['AMEX:XLK|1D'],
+      ['AMEX:XLY|1D']
+    ],
+    chartOnly: false,
+    width: '100%',
+    height: 300,
+    locale: 'es',
+    colorTheme: 'dark',
+    isTransparent: true,
+    autosize: true,
+    showVolume: false,
+    showMA: false,
+    chartType: 'area'
+  });
+  sectorContainer.appendChild(sectorScript);
+
+  const vixContainer = document.getElementById('vix-widget');
+  const vixScript = document.createElement('script');
+  vixScript.type = 'text/javascript';
+  vixScript.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+  vixScript.async = true;
+  vixScript.innerHTML = JSON.stringify({
+    symbols: [['TVC:VIX|1D']],
+    chartOnly: false,
+    width: '100%',
+    height: 220,
+    locale: 'es',
+    colorTheme: 'dark',
+    isTransparent: true,
+    autosize: true,
+    showVolume: false,
+    showMA: false,
+    chartType: 'area'
+  });
+  vixContainer.appendChild(vixScript);
+}
+
+let yieldCurveChart = null;
+async function loadYieldCurve(){
+  const canvas = document.getElementById('yield-curve-chart');
+  const noteEl = document.getElementById('yield-curve-note');
+  const { data, error } = await sb.from('yield_curve').select('*');
+
+  if(error || !data || data.length === 0){
+    noteEl.textContent = '';
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    if(yieldCurveChart){ yieldCurveChart.destroy(); yieldCurveChart = null; }
+    return;
+  }
+
+  const order = ['3M','2Y','5Y','10Y','30Y'];
+  const rows = [...data].sort((a,b) => order.indexOf(a.maturity) - order.indexOf(b.maturity));
+  const labels = rows.map(r => r.maturity);
+  const values = rows.map(r => Number(r.yield_pct));
+
+  const latestDate = rows.map(r => r.obs_date).sort().pop();
+  const twoY = rows.find(r => r.maturity === '2Y');
+  const tenY = rows.find(r => r.maturity === '10Y');
+  let inverted = '';
+  if(twoY && tenY){
+    inverted = Number(twoY.yield_pct) > Number(tenY.yield_pct) ? ' · curva invertida (2A > 10A)' : '';
+  }
+  noteEl.textContent = (latestDate ? 'Datos del ' + latestDate : '') + inverted;
+
+  if(yieldCurveChart){
+    yieldCurveChart.data.labels = labels;
+    yieldCurveChart.data.datasets[0].data = values;
+    yieldCurveChart.update();
+    return;
+  }
+
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-faint').trim();
+
+  yieldCurveChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: accentColor,
+        backgroundColor: 'transparent',
+        pointRadius: 3,
+        pointBackgroundColor: accentColor,
+        borderWidth: 2,
+        tension: 0.15
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ctx.parsed.y.toFixed(2) + '%'
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 },
+              callback: (v) => v.toFixed(1) + '%' } }
+      }
+    }
   });
 }
 
