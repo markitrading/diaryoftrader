@@ -7,24 +7,24 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
   :root{
-    --bg:#0D0F12;
-    --panel:#15181C;
-    --panel-2:#1B1F24;
-    --border:#262B31;
-    --border-soft:#1E2227;
-    --text:#EDEEF0;
-    --text-muted:#8B9199;
-    --text-faint:#565C64;
-    --accent:#79B8EC;
-    --accent-dim:#3D6E93;
-    --accent-bg:#12222E;
-    --pos:#5FAE7E;
-    --pos-bg:#12241A;
-    --neg:#C1583F;
-    --neg-bg:#291712;
+    --bg:#0B0F1A;
+    --panel:#131A2B;
+    --panel-2:#1B2440;
+    --border:#2A3550;
+    --border-soft:#1E273D;
+    --text:#EDEEF5;
+    --text-muted:#8B93AB;
+    --text-faint:#565F7A;
+    --accent:#FF6B4A;
+    --accent-dim:#B84B33;
+    --accent-bg:#2E160F;
+    --pos:#4ADE80;
+    --pos-bg:#12271A;
+    --neg:#F87171;
+    --neg-bg:#2E1414;
     --radius:10px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -34,7 +34,7 @@
       linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 42px 42px,
       var(--bg);
     color:var(--text);
-    font-family:'Outfit',sans-serif;
+    font-family:'Archivo',sans-serif;
     min-height:100vh;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
@@ -55,8 +55,8 @@
     justify-content:center;
     padding:24px;
     background:
-      radial-gradient(circle at 18% 15%, rgba(121,184,236,0.07), transparent 42%),
-      radial-gradient(circle at 85% 90%, rgba(95,174,126,0.05), transparent 40%),
+      radial-gradient(circle at 18% 15%, rgba(255,107,74,0.08), transparent 42%),
+      radial-gradient(circle at 85% 90%, rgba(74,222,128,0.04), transparent 40%),
       var(--bg);
   }
   .login-box{
@@ -74,9 +74,9 @@
     border:none;
     border-radius:9px;
     display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(135deg, var(--accent) 0%, #4C8FC4 100%);
-    color:#0B1720;
-    box-shadow:0 4px 14px rgba(121,184,236,0.35);
+    background:linear-gradient(135deg, var(--accent) 0%, #B84B33 100%);
+    color:#1A0D08;
+    box-shadow:0 4px 14px rgba(255,107,74,0.3);
     font-family:'JetBrains Mono',monospace;
     font-size:15px;
     font-weight:700;
@@ -119,7 +119,7 @@
   .btn-primary{
     width:100%;
     background:var(--accent);
-    color:#0B1720;
+    color:#1A0D08;
     border:none;
     border-radius:8px;
     padding:12px;
@@ -130,7 +130,7 @@
     margin-top:8px;
     transition:transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
-  .btn-primary:hover{background:#93C8F2;transform:translateY(-1px);box-shadow:0 8px 20px rgba(121,184,236,0.25);}
+  .btn-primary:hover{background:#FF8A6E;transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,107,74,0.25);}
   .btn-primary:active{transform:translateY(0);}
   .login-foot{
     display:flex;
@@ -185,7 +185,7 @@
     width:224px;
     flex-shrink:0;
     background:
-      linear-gradient(165deg, rgba(121,184,236,0.05) 0%, transparent 45%),
+      linear-gradient(165deg, rgba(255,107,74,0.06) 0%, transparent 45%),
       var(--panel);
     border-right:1px solid var(--border-soft);
     padding:20px 14px;
@@ -193,16 +193,25 @@
     flex-direction:column;
   }
   .side-brand{
-    display:flex;align-items:center;gap:9px;
-    padding:0 6px 24px;
+    display:flex;align-items:center;gap:10px;
+    padding:16px 14px 20px;
+    margin:-20px -14px 20px;
+    background:
+      radial-gradient(ellipse at top left, rgba(255,107,74,0.14) 0%, transparent 65%),
+      var(--panel-2);
+    border-bottom:1px solid var(--border-soft);
   }
   .side-brand .brand-glyph{
-    width:30px;height:30px;font-size:12px;
-    background:linear-gradient(135deg, var(--accent) 0%, #4C8FC4 100%);
-    color:#0B1720;border-color:transparent;
-    box-shadow:0 4px 14px rgba(121,184,236,0.35);
+    width:32px;height:32px;font-size:12.5px;
+    background:linear-gradient(135deg, var(--accent) 0%, #B84B33 100%);
+    color:#1A0D08;border-color:transparent;
+    animation:glyph-pulse 3s ease-in-out infinite;
   }
-  .side-brand .brand-name{font-size:16px;}
+  @keyframes glyph-pulse{
+    0%,100%{box-shadow:0 4px 14px rgba(255,107,74,0.3);}
+    50%{box-shadow:0 6px 22px rgba(255,107,74,0.6);}
+  }
+  .side-brand .brand-name{font-size:16.5px;letter-spacing:0.005em;}
 
   .nav{list-style:none;display:flex;flex-direction:column;gap:3px;flex:1;}
   .nav-item{
@@ -226,10 +235,10 @@
   .nav-item:hover{background:var(--panel-2);color:var(--text);transform:translateX(3px);}
   .nav-item:hover svg{transform:scale(1.15);color:var(--accent);}
   .nav-item.active{
-    background:linear-gradient(90deg, var(--accent-bg) 0%, rgba(121,184,236,0.03) 100%);
+    background:linear-gradient(90deg, var(--accent-bg) 0%, rgba(255,107,74,0.03) 100%);
     color:var(--accent);
-    border-color:#1F3C50;
-    box-shadow:0 4px 16px rgba(121,184,236,0.12);
+    border-color:#5A3324;
+    box-shadow:0 4px 16px rgba(255,107,74,0.14);
   }
   .nav-item.active::before{height:60%;}
   .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:0.9;transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1), color 0.2s ease;}
@@ -416,7 +425,7 @@
   .cal-daynum{font-size:11.5px;color:var(--text-muted);}
   .cal-daynum.today{
     display:inline-flex;align-items:center;justify-content:center;
-    width:18px;height:18px;border-radius:50%;background:var(--accent);color:#0B1720;
+    width:18px;height:18px;border-radius:50%;background:var(--accent);color:#1A0D08;
     font-weight:600;
   }
   .cal-pill{
@@ -518,7 +527,7 @@
     display:inline-flex;align-items:center;justify-content:center;
     width:22px;height:22px;border-radius:50%;font-size:12px;color:var(--text-muted);
   }
-  .checkin-num.today{background:var(--accent);color:#0B1720;font-weight:600;}
+  .checkin-num.today{background:var(--accent);color:#1A0D08;font-weight:600;}
 
   .goal-add-row{display:flex;gap:8px;margin-bottom:14px;}
   .goal-add-row input{
