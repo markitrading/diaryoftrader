@@ -1404,7 +1404,11 @@ async function onLoggedIn(email){
 }
 
 function applySectionLocks(){
-  const titles = { goals:'Objetivos', training:'Formación', systems:'Sistemas' };
+  const titles = {
+    dashboard:'Dashboard', accounts:'Cuentas', journal:'Journal', news:'Noticias',
+    goals:'Objetivos', training:'Formación', systems:'Sistemas', reports:'Informes',
+    calculator:'Calculadora', bias:'Sesgo de mercado', assistant:'Asistente IA'
+  };
   (currentUser.blockedSections || []).forEach(sec => {
     const viewEl = document.getElementById('view-' + sec);
     if(viewEl){
@@ -2795,9 +2799,17 @@ async function renderRolesPanel(){
   if(sectionsWrap){
     const { data: perms } = await sb.from('section_permissions').select('*');
     const sections = [
+      { key:'dashboard', label:'Dashboard' },
+      { key:'accounts', label:'Cuentas' },
+      { key:'journal', label:'Journal' },
+      { key:'news', label:'Noticias' },
       { key:'goals', label:'Objetivos' },
       { key:'training', label:'Formación' },
-      { key:'systems', label:'Sistemas' }
+      { key:'systems', label:'Sistemas' },
+      { key:'reports', label:'Informes' },
+      { key:'calculator', label:'Calculadora' },
+      { key:'bias', label:'Sesgo de mercado' },
+      { key:'assistant', label:'Asistente IA' }
     ];
     sectionsWrap.innerHTML = sections.map(s => {
       const allowedRoleIds = (perms || []).filter(p => p.section === s.key).map(p => p.role_id);
