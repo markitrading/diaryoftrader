@@ -1399,6 +1399,9 @@ async function onLoggedIn(email){
   currentUser.blockedSections = blocked || [];
   applySectionLocks();
 
+  const { data: isTeacher } = await sb.rpc('am_i_training_teacher');
+  currentUser.isTrainingTeacher = !!isTeacher;
+
   await Promise.all([loadAccounts(), loadTrades(), loadGoals()]);
   if(currentUser.isAdmin) loadAllowedEmails();
 }
@@ -2692,7 +2695,7 @@ let studentMessagesSubscribed = false;
 
 async function initTrainingMessages(){
   const select = document.getElementById('training-student-select');
-  if(currentUser.isAdmin){
+  if(currentUser.isAdmin || currentUser.isTrainingTeacher){
     select.style.display = 'block';
     await loadStudentOptions();
   } else {
@@ -2752,7 +2755,7 @@ async function sendStudentMessage(){
   if(!text) return;
 
   if(!currentThreadStudentEmail){
-    if(!currentUser.isAdmin){ currentThreadStudentEmail = currentUser.email; }
+    if(!currentUser.isAdmin && !currentUser.isTrainingTeacher){ currentThreadStudentEmail = currentUser.email; }
     else { return; }
   }
 
@@ -2781,7 +2784,13 @@ async function renderRolesPanel(){
       ? '<p class="goal-empty">Todavía no has creado ningún rango.</p>'
       : roles.map(r => `
         <div class="report-row">
-          <div style="flex:1;"><div class="rtitle">${escapeHtml(r.name)}</div></div>
+          <div style="flex:1;">
+            <div class="rtitle">${escapeHtml(r.name)}</div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-faint);margin-top:6px;">
+              <input type="checkbox" ${r.is_training_teacher ? 'checked' : ''} onchange="toggleTeacherRole('${r.id}', this.checked)">
+              Puede actuar como profesor en Formación (ve y elige conversación con todos los alumnos)
+            </label>
+          </div>
           <button class="acc-del" onclick="deleteRole('${r.id}')" title="Borrar rango">&times;</button>
         </div>
       `).join('');
@@ -2843,6 +2852,11 @@ async function deleteRole(id){
   const { error } = await sb.from('roles').delete().eq('id', id);
   if(error){ console.error(error); return; }
   renderRolesPanel();
+}
+
+async function toggleTeacherRole(roleId, isTeacher){
+  const { error } = await sb.from('roles').update({ is_training_teacher: isTeacher }).eq('id', roleId);
+  if(error) console.error(error);
 }
 
 async function toggleSectionPermission(checkbox){
