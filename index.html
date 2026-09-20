@@ -618,7 +618,8 @@
     <p class="lede" id="login-lede">Accede con tu correo para ver tus cuentas, tu journal y tu progreso de la semana.</p>
     <div class="field" id="login-fullname-field" style="display:none;">
       <label>Nombre y apellidos</label>
-      <input type="text" id="login-fullname" placeholder="Como quieres que te vean en el club">
+      <input type="text" id="login-fullname" placeholder="Tu nombre real, ej. Marc Alba">
+      <p style="font-size:11.5px;color:var(--text-faint);margin-top:6px;line-height:1.5;">Esto es una formación seria — usa tu nombre real, por favor. Nos ayuda a llevar un seguimiento correcto de cada alumno.</p>
     </div>
     <div class="field">
       <label>Correo</label>
@@ -690,10 +691,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 11h1M12 11h1M16 11h1M8 15h1M12 15h1M16 15h1M8 19h1M12 19h1"/></svg>
           Calculadora
         </li>
-        <li class="nav-item" onclick="showView('leaderboard', this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4"/><path d="M17 6h3a3 3 0 0 1-3 4"/></svg>
-          Leaderboard
-        </li>
         <li class="nav-item" onclick="showView('bias', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
           Sesgo de mercado
@@ -751,26 +748,12 @@
             <div id="dash-activity-feed"><p class="goal-empty">Todavía no hay actividad.</p></div>
           </div>
         </div>
-        <div class="grid-2">
-          <div class="panel-block">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-              <h3 style="margin:0;">Objetivos de la semana</h3>
-              <button class="btn-line" onclick="showView('goals', document.querySelector('.nav-item:nth-child(5)'))">Ver objetivos</button>
-            </div>
-            <div id="dash-goals-preview"><p style="font-size:12.5px;color:var(--text-faint);">Aún no has puesto objetivos esta semana.</p></div>
+        <div class="panel-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h3 style="margin:0;">Objetivos de la semana</h3>
+            <button class="btn-line" onclick="showView('goals', document.querySelector('.nav-item:nth-child(5)'))">Ver objetivos</button>
           </div>
-          <div class="panel-block">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-              <h3 style="margin:0;">Leaderboard</h3>
-              <button class="btn-line" onclick="showView('leaderboard', document.querySelector('.nav-item:nth-child(9)'))">Ver ranking</button>
-            </div>
-            <div class="rank-row" style="border-bottom:none;" id="dash-leaderboard-row">
-              <div class="rank-num" style="width:auto;color:var(--text-faint);">—</div>
-              <div class="avatar" style="width:24px;height:24px;font-size:10px;">--</div>
-              <div class="rank-name">Todavía no apareces en el ranking</div>
-              <div class="rank-value"></div>
-            </div>
-          </div>
+          <div id="dash-goals-preview"><p style="font-size:12.5px;color:var(--text-faint);">Aún no has puesto objetivos esta semana.</p></div>
         </div>
       </div>
 
@@ -1125,17 +1108,6 @@
         </div>
       </div>
 
-      <!-- LEADERBOARD -->
-      <div class="view" id="view-leaderboard">
-        <div class="page-head">
-          <h1>Leaderboard</h1>
-          <p>Ranking por retorno neto (payouts − gastado) de cada miembro.</p>
-        </div>
-        <div class="panel-block" id="leaderboard-list">
-          <p class="goal-empty">Todavía no hay datos suficientes para el ranking.</p>
-        </div>
-      </div>
-
       <!-- SESGO DE MERCADO -->
       <div class="view" id="view-bias">
         <div class="page-head">
@@ -1255,7 +1227,7 @@
         <div class="panel-block">
           <h3>Correos autorizados</h3>
           <table id="admin-emails-table">
-            <tr><th>Correo</th><th>Admin</th><th></th></tr>
+            <tr><th>Nombre</th><th>Correo</th><th>Admin</th><th></th></tr>
           </table>
         </div>
       </div>
@@ -1378,7 +1350,7 @@ async function onLoggedIn(email){
   document.getElementById('side-foot-email').textContent = currentUser.fullName || email;
   document.getElementById('profile-name-input').value = currentUser.fullName || '';
 
-  await Promise.all([loadAccounts(), loadTrades(), loadGoals(), loadLeaderboard()]);
+  await Promise.all([loadAccounts(), loadTrades(), loadGoals()]);
   if(currentUser.isAdmin) loadAllowedEmails();
 }
 
@@ -1428,51 +1400,8 @@ async function saveProfileName(){
   msg.style.color = 'var(--pos)';
   msg.textContent = 'Nombre guardado.';
   msg.style.display = 'block';
-  loadLeaderboard();
 }
 
-async function loadLeaderboard(){
-  const { data: top, error: topErr } = await sb.rpc('get_leaderboard');
-  const listWrap = document.getElementById('leaderboard-list');
-  if(topErr){
-    listWrap.innerHTML = '<p class="goal-empty">No se pudo cargar el ranking: ' + topErr.message + '</p>';
-  } else if(!top || top.length === 0){
-    listWrap.innerHTML = '<p class="goal-empty">Todavía no hay datos suficientes para el ranking.</p>';
-  } else {
-    listWrap.innerHTML = top.slice(0, 20).map((row, i) => {
-      const n = i + 1;
-      return `<div class="rank-row">
-        <div class="rank-num${n <= 3 ? ' top' : ''}">${n}</div>
-        <div class="rank-name">${row.display_name || 'Trader'}</div>
-        <div class="rank-value">${fmt(Number(row.net))}</div>
-      </div>`;
-    }).join('');
-  }
-
-  const { data: mine } = await sb.rpc('get_my_rank');
-  const row = document.getElementById('dash-leaderboard-row');
-  if(mine && mine.length > 0){
-    const m = mine[0];
-    row.innerHTML = `
-      <div class="rank-num" style="width:auto;color:var(--text-faint);">#${m.rank}</div>
-      <div class="avatar" style="width:24px;height:24px;font-size:10px;">${(currentUser.fullName || currentUser.email).slice(0,2).toUpperCase()}</div>
-      <div class="rank-name">Puesto ${m.rank} de ${m.total_users}</div>
-      <div class="rank-value">${fmt(Number(m.net))}</div>
-    `;
-  } else {
-    row.innerHTML = `
-      <div class="rank-num" style="width:auto;color:var(--text-faint);">—</div>
-      <div class="avatar" style="width:24px;height:24px;font-size:10px;">${(currentUser.fullName || currentUser.email).slice(0,2).toUpperCase()}</div>
-      <div class="rank-name">Todavía no apareces en el ranking</div>
-      <div class="rank-value"></div>
-    `;
-  }
-
-  tickerLeader = (top && top.length > 0) ? top[0] : null;
-  updateTickerTape();
-}
-
-let tickerLeader = null;
 let tickerStreak = null;
 
 const TICKER_QUOTES = [
@@ -1494,9 +1423,6 @@ function updateTickerTape(){
   const track = document.getElementById('ticker-track');
   if(!track) return;
   const parts = ['<b>Diary of Trader</b>'];
-  if(tickerLeader){
-    parts.push(`Líder del ranking: <b>${escapeHtml(tickerLeader.display_name || 'Trader')}</b> · ${fmt(Number(tickerLeader.net))}`);
-  }
   if(tickerStreak && tickerStreak.type){
     const word = tickerStreak.type === 'win' ? 'ganancias' : 'pérdidas';
     parts.push(`Tu racha: <b>${tickerStreak.count} ${word} seguidas</b>`);
@@ -2474,7 +2400,6 @@ async function savePayout(){
 
   acc.payouts = newPayouts;
   renderAccounts();
-  loadLeaderboard();
   closePayoutModal();
 }
 
@@ -2692,15 +2617,23 @@ async function deleteAccount(id){
 
 // ============ ADMIN — WHITELIST ============
 async function loadAllowedEmails(){
-  const { data, error } = await sb.from('allowed_emails').select('*').order('added_at', { ascending:false });
   const tbl = document.getElementById('admin-emails-table');
+  const [{ data, error }, { data: profilesData }] = await Promise.all([
+    sb.from('allowed_emails').select('*').order('added_at', { ascending:false }),
+    sb.from('profiles').select('user_email, full_name')
+  ]);
   if(error){
-    tbl.innerHTML = '<tr><th>Correo</th><th>Admin</th><th></th></tr><tr><td colspan="3" style="color:var(--neg);">' + error.message + '</td></tr>';
+    tbl.innerHTML = '<tr><th>Nombre</th><th>Correo</th><th>Admin</th><th></th></tr><tr><td colspan="4" style="color:var(--neg);">' + error.message + '</td></tr>';
     return;
   }
-  let rows = '<tr><th>Correo</th><th>Admin</th><th></th></tr>';
+  const nameMap = {};
+  (profilesData || []).forEach(p => { nameMap[p.user_email] = p.full_name; });
+
+  let rows = '<tr><th>Nombre</th><th>Correo</th><th>Admin</th><th></th></tr>';
   data.forEach(r => {
+    const name = nameMap[r.email];
     rows += `<tr>
+      <td>${name ? escapeHtml(name) : '<span style="color:var(--text-faint);">Sin registrar</span>'}</td>
       <td>${r.email}</td>
       <td>${r.is_admin ? '<span class="pill pos">Sí</span>' : '<span class="pill neutral">No</span>'}</td>
       <td style="text-align:right;"><button class="goal-del" onclick="removeAllowedEmail('${r.email}')" title="Quitar acceso">&times;</button></td>
